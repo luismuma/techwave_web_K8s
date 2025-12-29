@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Calculadora Web con Python</title>
+</head>
+<body>
+    <h1>Calculadora Web (Flask)</h1>
+
+    <form method="POST" action="/calcular">
+        <input type="number" step="any" name="num1" required>
+        <input type="number" step="any" name="num2" required>
+
+        <select name="operacion">
+            <option value="suma">Sumar</option>
+            <option value="resta">Restar</option>
+            <option value="multiplicacion">Multiplicar</option>
+            <option value="division">Dividir</option>
+        </select>
+
+        <button type="submit">Calcular</button>
+    </form>
+
+    {% if resultado is not none %}
+        <h2>Resultado: {{ resultado }}</h2>
+    {% endif %}
+</body>
+</html>
