@@ -1,1 +1,27 @@
-# vacio
+# observability/k8s/loki-values.yaml
+loki:
+  config:
+    table_manager:
+      retention_deletes_enabled: true
+      retention_period: 7d
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+promtail:
+  enabled: true
+  config:
+    clients:
+      - url: http://loki:3100/loki/api/v1/push
+    scrape_configs:
+      - job_name: flask-logs
+        static_configs:
+          - targets:
+              - localhost
+            labels:
+              job: flask
+

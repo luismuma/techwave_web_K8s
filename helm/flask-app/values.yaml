@@ -1,0 +1,29 @@
+replicaCount: 1
+
+image:
+  repository: registry.example.com/flask-app
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+
+env:
+  FLASK_ENV: production
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "500m"
+    memory: "256Mi"
+
+ingress:
+  enabled: true
+  host: flask.example.com
+  class: nginx
+  tls:
+    enabled: false
+    secretName: ""

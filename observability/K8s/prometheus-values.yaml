@@ -1,1 +1,18 @@
-//vacio
+# observability/k8s/prometheus-values.yaml
+alertmanager:
+  enabled: true
+
+server:
+  global:
+    scrape_interval: 15s
+  extraScrapeConfigs: |
+    - job_name: 'flask'
+      static_configs:
+        - targets: ['flask-service:5000']  # Service de Flask
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"

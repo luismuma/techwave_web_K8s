@@ -1,1 +1,19 @@
-# vacio
+# observability/k8s/tempo-values.yaml
+# Configura el receptor OTLP que Flask puede usar para enviar trazas.
+# Puedes habilitar HTTP o gRPC según tu librería de tracing.
+tempo:
+  enabled: true
+  receivers:
+    otlp:
+      protocols:
+        http:
+          endpoint: 4318
+        grpc:
+          endpoint: 4317
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
