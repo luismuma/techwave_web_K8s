@@ -1,0 +1,42 @@
+# =========================
+# STAGE 1: build / deps
+# =========================
+# Imagen base con Python para construir e instalar dependencias
+FROM python:3.11-slim AS builder
+
+# Directorio de trabajo dentro del contenedor
+WORKDIR /app
+
+# Instala Poetry (solo se necesita en la fase de build)
+RUN pip install poetry
+
+# Copia únicamente los archivos de dependencias
+COPY pyproject.toml poetry.lock ./
+
+# Configura Poetry para no usar virtualenvs
+# Instala solo dependencias de producción
+RUN poetry config virtualenvs.create false \
+ && poetry install --no-dev --no-interaction --no-ansi
+
+
+# =========================
+# STAGE 2: runtime
+# =========================
+# Imagen limpia y mínima para ejecución
+FROM python:3.11-slim
+
+# Directorio de trabajo final
+WORKDIR /app
+
+# Copia SOLO las dependencias instaladas desde el stage builder
+COPY --from=builder /usr/local/lib/python3.11 /usr/local/lib/python3.11
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Copia el código de la aplicación
+COPY app/ .
+
+# Documenta el puerto usado por la aplicación
+EXPOSE 5000
+
+# Comando de arranque del contenedor
+CMD ["python", "app.py"]
