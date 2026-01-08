@@ -14,7 +14,7 @@ server:
   extraScrapeConfigs: |
     - job_name: 'flask'
       static_configs:
-        - targets: ['techwave-web.default.svc.cluster.local:5000']
+        - targets: ['techwave-web:5000']
 
   # Recursos mínimos para Minikube
   resources:
