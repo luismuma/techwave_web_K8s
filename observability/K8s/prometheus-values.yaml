@@ -13,6 +13,7 @@ server:
   # Scrape de tu app Flask
   extraScrapeConfigs: |
     - job_name: 'flask'
+      metrics_path: /metrics
       static_configs:
         - targets: ['techwave-web:5000']
 
