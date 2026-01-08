@@ -53,7 +53,7 @@ jobs:
       # 4. Despliega la imagen usando Helm
       - name: Deploy to Kubernetes with Helm
         run: |
-          helm upgrade --install techwave \
+          helm install techwave \
            -f helm/flask-app/values.yaml \
            --set image.repository=lumuma2025/techwave_web_k8s \
            --set image.tag=1.0.0
