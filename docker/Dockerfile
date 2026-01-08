@@ -5,8 +5,9 @@ WORKDIR /app
 RUN pip install poetry
 
 COPY pyproject.toml poetry.lock ./
+# Instala solo dependencias de producción sin instalar el proyecto
 RUN poetry config virtualenvs.create false \
- && poetry install --only main --no-interaction --no-ansi
+&& poetry install --only main --no-interaction --no-ansi --no-root
 
 COPY app/ .
 
