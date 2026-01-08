@@ -1,0 +1,42 @@
+# Credenciales básicas (solo para entorno local)
+adminUser: admin
+adminPassword: admin
+
+# Servicio dentro del cluster
+service:
+  type: ClusterIP
+  port: 80
+
+# Persistencia deshabilitada (simplifica en Minikube)
+persistence:
+  enabled: false
+
+# Recursos mínimos
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 300m
+    memory: 256Mi
+
+# Datasources preconfigurados
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus-server.observability.svc.cluster.local
+        isDefault: true
+
+      - name: Loki
+        type: loki
+        access: proxy
+        url: http://loki.observability.svc.cluster.local:3100
+
+      - name: Tempo
+        type: tempo
+        access: proxy
+        url: http://tempo.observability.svc.cluster.local:3100

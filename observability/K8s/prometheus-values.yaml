@@ -1,14 +1,22 @@
-# observability/k8s/prometheus-values.yaml
+# =========================
+# Prometheus + Alertmanager
+# =========================
+
 alertmanager:
   enabled: true
 
 server:
+  # Configuración global
   global:
     scrape_interval: 15s
+
+  # Scrape de tu app Flask
   extraScrapeConfigs: |
     - job_name: 'flask'
       static_configs:
-        - targets: ['flask-service:5000']  # Service de Flask
+        - targets: ['techwave-web.default.svc.cluster.local:5000']
+
+  # Recursos mínimos para Minikube
   resources:
     requests:
       cpu: "100m"
@@ -16,3 +24,37 @@ server:
     limits:
       cpu: "500m"
       memory: "512Mi"
+
+# Node Exporter, Pushgateway y kube-state-metrics con recursos mínimos
+kubeStateMetrics:
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "128Mi"
+
+nodeExporter:
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "128Mi"
+
+pushgateway:
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "128Mi"
+
+# =========================
+# Tempo deshabilitado
+# =========================
+tempo:
+  enabled: false

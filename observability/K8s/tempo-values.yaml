@@ -1,19 +1,48 @@
-# observability/k8s/tempo-values.yaml
-# Configura el receptor OTLP que Flask puede usar para enviar trazas.
-# Puedes habilitar HTTP o gRPC según tu librería de tracing.
 tempo:
   enabled: true
+
   receivers:
     otlp:
       protocols:
         http:
-          endpoint: 4318
+          endpoint: 0.0.0.0:4318
         grpc:
-          endpoint: 4317
+          endpoint: 0.0.0.0:4317
+
+  storage:
+    trace:
+      backend: local
+      local:
+        path: /var/tempo/traces
+
   resources:
     requests:
-      cpu: "100m"
-      memory: "128Mi"
+      cpu: 100m
+      memory: 256Mi
     limits:
-      cpu: "500m"
-      memory: "512Mi"
+      cpu: 500m
+      memory: 512Mi
+
+  metricsGenerator:
+    enabled: false
+
+  usage_report:
+    enabled: false
+
+  livenessProbe:
+    httpGet:
+      path: /ready
+      port: http
+    initialDelaySeconds: 90
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 10
+
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 10
