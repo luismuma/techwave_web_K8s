@@ -22,7 +22,8 @@ jobs:
 
       # 3. Construye la imagen con tag del registry
       - name: Build Docker image
-        run: docker build -t lumuma2025/techwave_web_k8s:1.0.0 .
+        run: docker build -t lumuma2025/techwave_web_k8s:1.0.0 -f techwave_web_K8s/docker/Dockerfile techwave_web_K8s/app
+
 
       # 4. Push de la imagen al registry
       - name: Push Docker image
