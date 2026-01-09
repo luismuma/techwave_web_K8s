@@ -1,0 +1,27 @@
+deploy:
+    runs-on: ubuntu-latest
+    needs: build   # Este job espera a que build termine correctamente
+    steps:
+      # 1. Checkout del código
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Instala kubectl y Helm
+      - name: Setup Kubernetes tools
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      # 3. Configura acceso al cluster Kubernetes
+      - name: Configure Kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
+
+      # 4. Despliega la imagen usando Helm
+      - name: Deploy to Kubernetes with Helm
+        run: |
+          helm install techwave helm/flask-app -f helm/flask-app/values.yaml
+          
