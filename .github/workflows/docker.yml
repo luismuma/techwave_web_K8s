@@ -53,7 +53,7 @@ jobs:
       # 4. Despliega la imagen usando Helm
       - name: Deploy to Kubernetes with Helm
         run: |
-          helm install techwave . -f helm/flask-app/values.yaml
+          helm install techwave helm/flask-app -f helm/flask-app/values.yaml
           
           
 
