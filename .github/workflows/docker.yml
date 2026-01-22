@@ -1,7 +1,11 @@
 name: Build and Deploy Docker Image
+
 on:
   push:
     branches: [ "main" ]
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -12,7 +16,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          persist-credentials: true   # permite push con token personal
+          persist-credentials: true
 
       # 2. Login a Docker Hub
       - name: Docker Hub login
@@ -24,7 +28,7 @@ jobs:
       # 3. Construir imagen con tag dinámico (SHA corto)
       - name: Build Docker image
         run: |
-          IMAGE_TAG=${GITHUB_SHA::8}   # 8 primeros caracteres del SHA
+          IMAGE_TAG=${GITHUB_SHA::8}
           docker build -t lumuma2025/techwave_web_k8s:$IMAGE_TAG -f docker/Dockerfile .
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
@@ -38,14 +42,14 @@ jobs:
         run: |
           sed -i "s|tag: .*|tag: \"$IMAGE_TAG\"|" $GITHUB_WORKSPACE/helm/flask-app/values.yaml
 
-      # 6. Configurar Git y push seguro usando HELM_GITHUB_USER y HELM_GITHUB_TOKEN
+      # 6. Commit y push
       - name: Commit and push updated values.yaml
         run: |
-          git config user.name "${{ secrets.HELM_GITHUB_USER }}"
-          git config user.email "${{ secrets.HELM_GITHUB_USER }}@users.noreply.github.com"
-          git add $GITHUB_WORKSPACE/helm/flask-app/values.yaml
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add helm/flask-app/values.yaml
           git commit -m "chore: update Docker image to $IMAGE_TAG" || echo "No changes to commit"
-          git push https://${{ secrets.HELM_GITHUB_USER }}:${{ secrets.HELM_GITHUB_TOKEN }}@github.com/luismuma/techwave_web_helm.git main --force || echo "Push failed, but workflow continues"
+          git push
 
       # 7. Verificar imagen construida (opcional)
       - name: Verify Docker image
