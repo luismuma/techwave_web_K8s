@@ -39,16 +39,18 @@ jobs:
         run: |
           sed -i "s|tag: .*|tag: \"$IMAGE_TAG\"|" $GITHUB_WORKSPACE/helm/flask-app/values.yaml
 
-      # 6. Commit y push del cambio a Git
-      - name: Commit updated values.yaml
+      - name: Configure Git for push
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add $GITHUB_WORKSPACE/helm/flask-app/values.yaml
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/luismuma/techwave_web_K8s.git
+
+      # 6. Commit y push del cambio a Git
+      - name: Commit updated values.yaml
+        run: |
+          git add flask-app/values.yaml
           git commit -m "chore: update Docker image to $IMAGE_TAG"
-          git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          git push origin main
 
       # 7. Verificar imagen construida (opcional)
       - name: Verify Docker image
