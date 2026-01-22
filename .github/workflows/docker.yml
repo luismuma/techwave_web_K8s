@@ -8,25 +8,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Descarga el código del repositorio
+      # 1. Descargar código
       - name: Checkout code
         uses: actions/checkout@v4
+
       # 2. Login en Docker Hub
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      # 3. Construye la imagen con tag del registry
+
+      # 3. Construir imagen con tag dinámico (commit SHA)
       - name: Build Docker image
-        run: docker build -t lumuma2025/techwave_web_k8s:1.0.0 -f docker/Dockerfile .
-      # 4. Push de la imagen al registry
+        run: |
+          IMAGE_TAG=${GITHUB_SHA::8}  # 8 primeros caracteres del SHA
+          docker build -t lumuma2025/techwave_web_k8s:$IMAGE_TAG -f docker/Dockerfile .
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      # 4. Push imagen al registry
       - name: Push Docker image
-        run: docker push lumuma2025/techwave_web_k8s:1.0.0
-      # 5. verifica informacion de la imagen
+        run: |
+          docker push lumuma2025/techwave_web_k8s:$IMAGE_TAG
+
+      # 5. Actualizar Helm values.yaml con la nueva versión
+      - name: Update Helm values.yaml
+        run: |
+          sed -i "s|tag: .*|tag: \"$IMAGE_TAG\"|" charts-helm/flask-app/values.yaml
+
+      # 6. Commit y push del cambio a Git
+      - name: Commit updated values.yaml
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add charts-helm/flask-app/values.yaml
+          git commit -m "chore: update Docker image to $IMAGE_TAG"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 7. Verificar imagen construida (opcional)
       - name: Verify Docker image
         run: docker images
-
   
-          
-
