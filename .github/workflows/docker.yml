@@ -34,14 +34,14 @@ jobs:
       # 5. Actualizar Helm values.yaml con la nueva versión
       - name: Update Helm values.yaml
         run: |
-          sed -i "s|tag: .*|tag: \"$IMAGE_TAG\"|" $GITHUB_WORKSPACE/flask-app/values.yaml
+          sed -i "s|tag: .*|tag: \"$IMAGE_TAG\"|" $GITHUB_WORKSPACE/charts-helm/flask-app/values.yaml
 
       # 6. Commit y push del cambio a Git
       - name: Commit updated values.yaml
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add $GITHUB_WORKSPACE/flask-app/values.yaml
+          git add $GITHUB_WORKSPACE/charts-helm/flask-app/values.yaml
           git commit -m "chore: update Docker image to $IMAGE_TAG"
           git push
         env:
