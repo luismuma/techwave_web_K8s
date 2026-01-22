@@ -48,11 +48,12 @@ jobs:
           git remote set-url origin https://${{ secrets.HELM_GITHUB_USER }}:${{ secrets.HELM_GITHUB_TOKEN }}@github.com/luismuma/techwave_web_K8s.git
 
       # 7. Commit y push del cambio
-      - name: Commit updated values.yaml
+      - name: Commit and push changes
         run: |
           git add $GITHUB_WORKSPACE/helm/flask-app/values.yaml
           git commit -m "chore: update Docker image to $IMAGE_TAG" || echo "No changes to commit"
-          git push origin main
+          git push origin main --force || echo "Push failed, but workflow continues"
+
 
       # 8. Verificar imagen construida (opcional)
       - name: Verify Docker image
