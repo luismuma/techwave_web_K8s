@@ -30,29 +30,30 @@ jobs:
       - name: Push Docker image
         run: |
           docker push lumuma2025/techwave_web_k8s:$IMAGE_TAG
-      # 4.15. ruta Helm values.yaml con la nueva versión
+
+      # 4.15. Listar archivos para verificar ruta
       - name: List repo files
         run: ls -R $GITHUB_WORKSPACE
-        
+
       # 5. Actualizar Helm values.yaml con la nueva versión
       - name: Update Helm values.yaml
         run: |
           sed -i "s|tag: .*|tag: \"$IMAGE_TAG\"|" $GITHUB_WORKSPACE/helm/flask-app/values.yaml
 
+      # 6. Configurar Git para push usando HELM_GITHUB_USER y HELM_GITHUB_TOKEN
       - name: Configure Git for push
         run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/luismuma/techwave_web_K8s.git
+          git config user.name "${{ secrets.HELM_GITHUB_USER }}"
+          git config user.email "${{ secrets.HELM_GITHUB_USER }}@users.noreply.github.com"
+          git remote set-url origin https://${{ secrets.HELM_GITHUB_USER }}:${{ secrets.HELM_GITHUB_TOKEN }}@github.com/luismuma/techwave_web_K8s.git
 
-      # 6. Commit y push del cambio a Git
+      # 7. Commit y push del cambio
       - name: Commit updated values.yaml
         run: |
           git add $GITHUB_WORKSPACE/helm/flask-app/values.yaml
-          git commit -m "chore: update Docker image to $IMAGE_TAG"
+          git commit -m "chore: update Docker image to $IMAGE_TAG" || echo "No changes to commit"
           git push origin main
 
-      # 7. Verificar imagen construida (opcional)
+      # 8. Verificar imagen construida (opcional)
       - name: Verify Docker image
         run: docker images
-  
