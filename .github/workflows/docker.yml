@@ -30,7 +30,10 @@ jobs:
       - name: Push Docker image
         run: |
           docker push lumuma2025/techwave_web_k8s:$IMAGE_TAG
-
+      # 4.15. ruta Helm values.yaml con la nueva versión
+      - name: List repo files
+        run: ls -R $GITHUB_WORKSPACE
+        
       # 5. Actualizar Helm values.yaml con la nueva versión
       - name: Update Helm values.yaml
         run: |
