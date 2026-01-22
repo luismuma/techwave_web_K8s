@@ -9,52 +9,42 @@ jobs:
 
     steps:
       # 1. Descargar código
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Login en Docker Hub
-      - name: Login to Docker Hub
+      # 2. Login a Docker Hub
+      - name: Docker Hub login
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 3. Construir imagen con tag dinámico (commit SHA)
+      # 3. Construir imagen con tag dinámico (SHA corto)
       - name: Build Docker image
         run: |
-          IMAGE_TAG=${GITHUB_SHA::8}  # 8 primeros caracteres del SHA
+          IMAGE_TAG=${GITHUB_SHA::8}   # 8 primeros caracteres del SHA
           docker build -t lumuma2025/techwave_web_k8s:$IMAGE_TAG -f docker/Dockerfile .
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
-      # 4. Push imagen al registry
+      # 4. Push de la imagen al Docker Hub
       - name: Push Docker image
         run: |
           docker push lumuma2025/techwave_web_k8s:$IMAGE_TAG
-
-      # 4.15. Listar archivos para verificar ruta
-      - name: List repo files
-        run: ls -R $GITHUB_WORKSPACE
 
       # 5. Actualizar Helm values.yaml con la nueva versión
       - name: Update Helm values.yaml
         run: |
           sed -i "s|tag: .*|tag: \"$IMAGE_TAG\"|" $GITHUB_WORKSPACE/helm/flask-app/values.yaml
 
-      # 6. Configurar Git para push usando HELM_GITHUB_USER y HELM_GITHUB_TOKEN
-      - name: Configure Git for push
+      # 6. Commit y push seguro usando HELM_GITHUB_USER y HELM_GITHUB_TOKEN
+      - name: Commit and push updated values.yaml
         run: |
           git config user.name "${{ secrets.HELM_GITHUB_USER }}"
           git config user.email "${{ secrets.HELM_GITHUB_USER }}@users.noreply.github.com"
-          git remote set-url origin https://${{ secrets.HELM_GITHUB_USER }}:${{ secrets.HELM_GITHUB_TOKEN }}@github.com/luismuma/techwave_web_K8s.git
-
-      # 7. Commit y push del cambio
-      - name: Commit and push changes
-        run: |
           git add $GITHUB_WORKSPACE/helm/flask-app/values.yaml
           git commit -m "chore: update Docker image to $IMAGE_TAG" || echo "No changes to commit"
-          git push origin main --force || echo "Push failed, but workflow continues"
+          git push https://${{ secrets.HELM_GITHUB_USER }}:${{ secrets.HELM_GITHUB_TOKEN }}@github.com/luismuma/techwave_web_K8s.git main --force || echo "Push failed, but workflow continues"
 
-
-      # 8. Verificar imagen construida (opcional)
+      # 7. Verificar imagen construida (opcional)
       - name: Verify Docker image
         run: docker images
