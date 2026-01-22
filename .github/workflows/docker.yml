@@ -48,7 +48,7 @@ jobs:
       # 6. Commit y push del cambio a Git
       - name: Commit updated values.yaml
         run: |
-          git add flask-app/values.yaml
+          git add $GITHUB_WORKSPACE/helm/flask-app/values.yaml
           git commit -m "chore: update Docker image to $IMAGE_TAG"
           git push origin main
 
