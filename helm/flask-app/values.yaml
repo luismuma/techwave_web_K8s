@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: lumuma2025/techwave_web_k8s
-  tag: "ab2ca043"
+  tag: "5cb3ce35"
   pullPolicy: Always
 
 env:
