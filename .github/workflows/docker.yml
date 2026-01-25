@@ -69,5 +69,5 @@ jobs:
       - name: Deploy with Helm
         run: |
           helm upgrade --install flask-app ./helm/flask-app \
-            --set image.repository=lumuma2025/techwave_web_k8s/techwave_web_k8s \
+            --set image.repository=lumuma2025/techwave_web_k8s \
             --set image.tag=$IMAGE_TAG
