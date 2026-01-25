@@ -61,3 +61,13 @@ jobs:
       # 7. Verificar imagen construida (opcional)
       - name: Verify Docker image
         run: docker images
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name eks-demo --region ${{ secrets.AWS_REGION }}
+
+      - name: Deploy with Helm
+        run: |
+          helm upgrade --install flask-app ./helm/flask-app \
+            --set image.repository=lumuma2025/techwave_web_k8s/techwave_web_k8s \
+            --set image.tag=$IMAGE_TAG
