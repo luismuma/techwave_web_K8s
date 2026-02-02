@@ -63,8 +63,10 @@ jobs:
           
       # 8 Verificar imagen construida (opcional)
       - name: Verify Docker image
-        run: docker images
-        
+        run: |
+          echo "Verifying built Docker image with tag $IMAGE_TAG"
+          docker images lumuma2025/techwave_web_k8s:$IMAGE_TAG
+          
       # 9. deploy with helm
       - name: Deploy with Helm
         run: |
