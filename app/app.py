@@ -88,6 +88,8 @@ def calcular():
 
     if operacion == 'suma':
         resultado = sumar(a, b)
+    elif operacion == 'raiz':
+        resultado = raiz(b, i)
     elif operacion == 'resta':
         resultado = restar(a, b)
     elif operacion == 'multiplicacion':
