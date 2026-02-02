@@ -55,8 +55,13 @@ operation_counter = meter.create_counter(
 )
 
 # Funciones backend
+
 def raiz(a, b):
-    return pow(a, 1/b) 
+    if b == 0:
+        return "Error: el índice no puede ser 0"
+    return pow(a, 1/b)
+
+
 
 def sumar(a, b):
     return a + b
