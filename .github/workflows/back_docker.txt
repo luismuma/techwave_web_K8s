@@ -1,0 +1,95 @@
+deploy:
+    runs-on: ubuntu-latest
+    needs: build   # Este job espera a que build termine correctamente
+    steps:
+      # 1. Checkout del código
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Instala kubectl y Helm
+      - name: Setup Kubernetes tools
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      # 3. Configura acceso al cluster Kubernetes
+      - name: Configure Kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
+
+      # 4. Despliega la imagen usando Helm
+      - name: Deploy to Kubernetes with Helm
+        run: |
+          helm install techwave helm/flask-app -f helm/flask-app/values.yaml
+
+name: Build and Deploy Docker Image
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Descargar código
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+         persist-credentials: true   # permite push con GITHUB_TOKEN
+
+      # 2. Login a Docker Hub
+      - name: Docker Hub login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 3. Construir imagen con tag dinámico (SHA corto)
+      - name: Build Docker image
+        run: |
+          IMAGE_TAG=${GITHUB_SHA::8}   # 8 primeros caracteres del SHA
+          docker build -t lumuma2025/techwave_web_k8s:$IMAGE_TAG -f docker/Dockerfile .
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      # 4. Push de la imagen al Docker Hub
+      - name: Push Docker image
+        run: |
+          docker push lumuma2025/techwave_web_k8s:$IMAGE_TAG
+
+      # 5. Actualizar Helm values.yaml con la nueva versión
+      - name: Update Helm values.yaml
+        run: |
+          sed -i "s|tag: .*|tag: \"$IMAGE_TAG\"|" $GITHUB_WORKSPACE/helm/flask-app/values-green.yaml
+
+      # 6. Commit y push seguro usando HELM_GITHUB_USER y HELM_GITHUB_TOKEN
+      - name: Commit and push updated values.yaml
+        run: |
+          git config user.name "${{ secrets.HELM_GITHUB_USER }}"
+          git config user.email "${{ secrets.HELM_GITHUB_USER }}@users.noreply.github.com"
+          git add $GITHUB_WORKSPACE/helm/flask-app/values-green.yaml
+          git commit -m "chore: update Docker image to $IMAGE_TAG" || echo "No changes to commit"
+          git push https://${{ secrets.HELM_GITHUB_USER }}:${{ secrets.HELM_GITHUB_TOKEN }}@github.com/luismuma/techwave_web_K8s.git main --force || echo "Push failed, but workflow continues"
+
+      # 7. Verificar imagen construida (opcional)
+      - name: Verify Docker image
+        run: docker images
+        
+      # 8. deploy with helm
+      - name: Deploy with Helm
+        run: |
+          # helm upgrade --install flask-app ./helm/flask-app \
+          #   -f helm/flask-app/values-green.yaml \
+          #   --set image.repository=lumuma2025/techwave_web_k8s \
+          #   --set image.tag=$IMAGE_TAG \
+          #   --set service.type=LoadBalancer \
+          #   --set service.port=5000
+          helm upgrade --install flask-app-green ./helm/flask-app \
+             -f helm/flask-app/values-green.yaml \
+             --set image.repository=lumuma2025/techwave_web_k8s \
+             --set image.tag=$IMAGE_TAG
+      
+          
