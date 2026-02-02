@@ -47,11 +47,18 @@ jobs:
           git commit -m "chore: update Docker image to $IMAGE_TAG" || echo "No changes to commit"
           git push https://${{ secrets.HELM_GITHUB_USER }}:${{ secrets.HELM_GITHUB_TOKEN }}@github.com/luismuma/techwave_web_K8s.git main --force || echo "Push failed, but workflow continues"
 
-      # 7. Verificar imagen construida (opcional)
+      # 7. Configurar kubectl para EKS
+      - name: Configure kubectl for EKS
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          aws eks --region $AWS_REGION update-kubeconfig --name eks-demo
+          
+      # 8 Verificar imagen construida (opcional)
       - name: Verify Docker image
         run: docker images
         
-      # 8. deploy with helm
+      # 9. deploy with helm
       - name: Deploy with Helm
         run: |
           helm upgrade --install flask-app-green ./helm/flask-app \
