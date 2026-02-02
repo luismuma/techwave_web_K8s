@@ -36,14 +36,14 @@ jobs:
       # 5. Actualizar Helm values.yaml con la nueva versión
       - name: Update Helm values.yaml
         run: |
-          sed -i "s|tag: .*|tag: \"$IMAGE_TAG\"|" $GITHUB_WORKSPACE/helm/flask-app/values.yaml
+          sed -i "s|tag: .*|tag: \"$IMAGE_TAG\"|" $GITHUB_WORKSPACE/helm/flask-app/values-green.yaml
 
       # 6. Commit y push seguro usando HELM_GITHUB_USER y HELM_GITHUB_TOKEN
       - name: Commit and push updated values.yaml
         run: |
           git config user.name "${{ secrets.HELM_GITHUB_USER }}"
           git config user.email "${{ secrets.HELM_GITHUB_USER }}@users.noreply.github.com"
-          git add $GITHUB_WORKSPACE/helm/flask-app/values.yaml
+          git add $GITHUB_WORKSPACE/helm/flask-app/values-green.yaml
           git commit -m "chore: update Docker image to $IMAGE_TAG" || echo "No changes to commit"
           git push https://${{ secrets.HELM_GITHUB_USER }}:${{ secrets.HELM_GITHUB_TOKEN }}@github.com/luismuma/techwave_web_K8s.git main --force || echo "Push failed, but workflow continues"
 
