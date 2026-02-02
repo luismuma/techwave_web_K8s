@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request
 import logging
+import math
 from pythonjsonlogger import jsonlogger
 
 from opentelemetry import metrics
@@ -54,8 +55,8 @@ operation_counter = meter.create_counter(
 )
 
 # Funciones backend
-def raiz(b, i):
-    return b ** (1/i) 
+def raiz(a, b):
+    return pow(a, 1/b) 
 
 def sumar(a, b):
     return a + b
@@ -89,7 +90,7 @@ def calcular():
     if operacion == 'suma':
         resultado = sumar(a, b)
     elif operacion == 'raiz':
-        resultado = raiz(b, i)
+        resultado = raiz(a, b)
     elif operacion == 'resta':
         resultado = restar(a, b)
     elif operacion == 'multiplicacion':
