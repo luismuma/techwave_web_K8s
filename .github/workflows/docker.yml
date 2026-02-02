@@ -50,3 +50,18 @@ jobs:
       # 7. Verificar imagen construida (opcional)
       - name: Verify Docker image
         run: docker images
+        
+      # 8. deploy with helm
+      - name: Deploy with Helm
+        run: |
+          # helm upgrade --install flask-app ./helm/flask-app \
+          #   -f helm/flask-app/values-green.yaml \
+          #   --set image.repository=lumuma2025/techwave_web_k8s \
+          #   --set image.tag=$IMAGE_TAG \
+          #   --set service.type=LoadBalancer \
+          #   --set service.port=5000
+          helm upgrade --install flask-app-green ./helm/flask-app \
+             -f helm/flask-app/values-green.yaml \
+             --set image.repository=lumuma2025/techwave_web_k8s \
+             --set image.tag=$IMAGE_TAG
+      
