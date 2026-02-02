@@ -1,9 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-{{ .Values.version }}
   labels:
     app: {{ .Release.Name }}
+    version: {{ .Values.version }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:

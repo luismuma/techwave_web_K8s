@@ -8,6 +8,7 @@ spec:
   type: {{ .Values.service.type }}
   selector:
     app: {{ .Release.Name }}
+    version: {{ .Values.version }}
   ports:
     - name: http
       port: {{ .Values.service.port }}

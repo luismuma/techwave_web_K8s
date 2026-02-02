@@ -1,5 +1,5 @@
 replicaCount: 2
-version: blue
+version: green
 image:
   repository: lumuma2025/techwave_web_k8s
   tag: 1.0.0
