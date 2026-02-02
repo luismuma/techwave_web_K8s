@@ -47,6 +47,14 @@ jobs:
           git commit -m "chore: update Docker image to $IMAGE_TAG" || echo "No changes to commit"
           git push https://${{ secrets.HELM_GITHUB_USER }}:${{ secrets.HELM_GITHUB_TOKEN }}@github.com/luismuma/techwave_web_K8s.git main --force || echo "Push failed, but workflow continues"
 
+      # 7. Configurar AWS
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
       # 7. Configurar kubectl para EKS
       - name: Configure kubectl for EKS
         env:
