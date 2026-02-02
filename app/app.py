@@ -54,6 +54,9 @@ operation_counter = meter.create_counter(
 )
 
 # Funciones backend
+def raiz (b, i):
+    return b ** (1/i) 
+
 def sumar(a, b):
     return a + b
 
