@@ -44,7 +44,10 @@ jobs:
           git config user.email "${{ secrets.HELM_GITHUB_USER }}@users.noreply.github.com"
           git add $GITHUB_WORKSPACE/helm/flask-app/values-green.yaml
           git commit -m "chore: update Docker image to $IMAGE_TAG" || echo "No changes to commit"
-          git push https://${{ secrets.HELM_GITHUB_USER }}:${{ secrets.HELM_GITHUB_TOKEN }}@github.com/luismuma/techwave_web_K8s.git main --force || echo "Push failed, but workflow continues"
+          git push origin main || echo "No changes to push"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # git push https://${{ secrets.HELM_GITHUB_USER }}:${{ secrets.HELM_GITHUB_TOKEN }}@github.com/luismuma/techwave_web_K8s.git main --force || echo "Push failed, but workflow continues"
 
       # 7. Configurar AWS
       - name: Configure AWS credentials
