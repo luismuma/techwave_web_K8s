@@ -24,7 +24,7 @@ deploy:
       - name: Deploy to Kubernetes with Helm
         run: |
           helm install techwave helm/flask-app -f helm/flask-app/values.yaml
-=====================================================
+
 name: Build and Deploy Docker Image
 on:
   push:
