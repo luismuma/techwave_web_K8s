@@ -33,12 +33,18 @@ jobs:
       - name: Push Docker image
         run: |
           docker push lumuma2025/techwave_web_k8s:$IMAGE_TAG
+          
+      # Install yq
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
 
-      # 5. Update Helm values.yaml
-      # sed -i "s|tag: .*|tag: \"$IMAGE_TAG\"|" helm/flask-app/values-green.yaml
+      # Update Helm values.yaml
       - name: Update Helm values.yaml
         run: |
-          sed -i -E "s|(tag:[[:space:]]*).*|\1\"$IMAGE_TAG\"|" helm/flask-app/values-green.yaml
+          yq -i '.image.tag = strenv(IMAGE_TAG)' helm/flask-app/values-green.yaml
+
       - name: Debug values file
         run: |
           cat helm/flask-app/values-green.yaml
