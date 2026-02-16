@@ -2,18 +2,15 @@ replicaCount: 2
 version: green
 image:
   repository: lumuma2025/techwave_web_k8s
-  tag: 1.0.0
+  tag: "69182309"
   pullPolicy: Always
-
 env:
   FLASK_ENV: development
   FLASK_RUN_HOST: 0.0.0.0
   FLASK_RUN_PORT: "5000"
-
 service:
   type: LoadBalancer
   port: 5000
-
 resources:
   requests:
     cpu: "200m"
@@ -21,6 +18,5 @@ resources:
   limits:
     cpu: "500m"
     memory: "512Mi"
-
 ingress:
   enabled: false
