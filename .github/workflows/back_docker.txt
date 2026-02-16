@@ -1,39 +1,11 @@
-deploy:
-    runs-on: ubuntu-latest
-    needs: build   # Este job espera a que build termine correctamente
-    steps:
-      # 1. Checkout del código
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      # 2. Instala kubectl y Helm
-      - name: Setup Kubernetes tools
-        run: |
-          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-          chmod +x kubectl
-          sudo mv kubectl /usr/local/bin/
-          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-
-      # 3. Configura acceso al cluster Kubernetes
-      - name: Configure Kubeconfig
-        run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
-
-      # 4. Despliega la imagen usando Helm
-      - name: Deploy to Kubernetes with Helm
-        run: |
-          helm install techwave helm/flask-app -f helm/flask-app/values.yaml
-
 name: Build and Deploy Docker Image
+
 on:
   push:
     branches: [ "main" ]
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       # 1. Descargar código
       - name: Checkout repository
@@ -47,7 +19,10 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
+      # 3. Construir imagen con tag dinámico (SHA corto)
+      - name: path_execution
+        run: |
+          pwd  # 8 primeros caracteres del SHA
       # 3. Construir imagen con tag dinámico (SHA corto)
       - name: Build Docker image
         run: |
@@ -72,24 +47,37 @@ jobs:
           git config user.email "${{ secrets.HELM_GITHUB_USER }}@users.noreply.github.com"
           git add $GITHUB_WORKSPACE/helm/flask-app/values-green.yaml
           git commit -m "chore: update Docker image to $IMAGE_TAG" || echo "No changes to commit"
-          git push https://${{ secrets.HELM_GITHUB_USER }}:${{ secrets.HELM_GITHUB_TOKEN }}@github.com/luismuma/techwave_web_K8s.git main --force || echo "Push failed, but workflow continues"
+          git push origin main || echo "No changes to push"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # git push https://${{ secrets.HELM_GITHUB_USER }}:${{ secrets.HELM_GITHUB_TOKEN }}@github.com/luismuma/techwave_web_K8s.git main --force || echo "Push failed, but workflow continues"
 
-      # 7. Verificar imagen construida (opcional)
+      # 7. Configurar AWS
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      # 7. Configurar kubectl para EKS
+      - name: Configure kubectl for EKS
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          aws eks --region $AWS_REGION update-kubeconfig --name eks-demo
+          
+      # 8 Verificar imagen construida (opcional)
       - name: Verify Docker image
-        run: docker images
-        
-      # 8. deploy with helm
+        run: |
+          echo "Verifying built Docker image with tag $IMAGE_TAG"
+          docker images lumuma2025/techwave_web_k8s:$IMAGE_TAG
+          
+      # 9. deploy with helm
       - name: Deploy with Helm
         run: |
-          # helm upgrade --install flask-app ./helm/flask-app \
-          #   -f helm/flask-app/values-green.yaml \
-          #   --set image.repository=lumuma2025/techwave_web_k8s \
-          #   --set image.tag=$IMAGE_TAG \
-          #   --set service.type=LoadBalancer \
-          #   --set service.port=5000
           helm upgrade --install flask-app-green ./helm/flask-app \
              -f helm/flask-app/values-green.yaml \
              --set image.repository=lumuma2025/techwave_web_k8s \
              --set image.tag=$IMAGE_TAG
-      
-          
+             
