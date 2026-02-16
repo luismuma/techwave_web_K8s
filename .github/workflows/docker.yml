@@ -35,10 +35,14 @@ jobs:
           docker push lumuma2025/techwave_web_k8s:$IMAGE_TAG
 
       # 5. Update Helm values.yaml
+      # sed -i "s|tag: .*|tag: \"$IMAGE_TAG\"|" helm/flask-app/values-green.yaml
       - name: Update Helm values.yaml
         run: |
-          sed -i "s|tag: .*|tag: \"$IMAGE_TAG\"|" helm/flask-app/values-green.yaml
-
+          sed -i -E "s|(tag:[[:space:]]*).*|\1\"$IMAGE_TAG\"|" helm/flask-app/values-green.yaml
+      - name: Debug values file
+        run: |
+          cat helm/flask-app/values-green.yaml
+          
       # 6. Commit & push (dispara ArgoCD)
       - name: Commit and push updated values.yaml
         run: |
