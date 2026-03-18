@@ -21,10 +21,10 @@ services:
     ports:
       - "3100:3100"
     volumes:
-      - ./loki-config.yml:/etc/loki/config.yml
-      - ./loki/index:/loki/index
-      - ./loki/chunks:/loki/chunks
-      - ./loki/wal:/loki/wal
+      - ./loki-config.yml:/etc/loki/config.yml:Z
+      - ./loki/index:/loki/index:Z
+      - ./loki/chunks:/loki/chunks:Z
+      - ./loki/wal:/loki/wal:Z
     command: -config.file=/etc/loki/config.yml
     networks:
       - observability
