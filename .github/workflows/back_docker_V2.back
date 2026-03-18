@@ -1,12 +1,8 @@
 name: Build and Push Docker Image
 
-# 🔹 Se dispara solo cuando termina el workflow de cluster
 on:
-  workflow_run:
-    workflows: ["Create Cluster and Trigger Build"]  # nombre exacto de tu workflow de cluster
-    types:
-      - completed  # solo cuando termina
-
+  push:
+    branches: ["main"]
 permissions:
   contents: write
 
@@ -15,48 +11,47 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout
+      # 1. Checkout
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           persist-credentials: true
 
-      # 2️⃣ Login Docker Hub
+      # 2. Login Docker Hub
       - name: Docker Hub login
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 3️⃣ Build image con SHA corto
+      # 3. Build image con SHA corto
       - name: Build Docker image
         run: |
           IMAGE_TAG=${GITHUB_SHA::8}
           docker build -t lumuma2025/techwave_web_k8s:$IMAGE_TAG -f docker/Dockerfile .
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
-      # 4️⃣ Push image
+      # 4. Push image
       - name: Push Docker image
         run: |
           docker push lumuma2025/techwave_web_k8s:$IMAGE_TAG
           
-      # 5️⃣ Instalar yq
+      # Install yq
       - name: Install yq
         run: |
           sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
           sudo chmod +x /usr/local/bin/yq
 
-      # 6️⃣ Actualizar Helm values.yaml
+      # Update Helm values.yaml
       - name: Update Helm values.yaml
         run: |
           yq -i '.image.tag = strenv(IMAGE_TAG)' helm/flask-app/values-green.yaml
 
-      # 7️⃣ Debug values file
       - name: Debug values file
         run: |
           cat helm/flask-app/values-green.yaml
           
-      # 8️⃣ Commit & push (dispara ArgoCD)
+      # 6. Commit & push (dispara ArgoCD)
       - name: Commit and push updated values.yaml
         run: |
           git config user.name "github-actions"
