@@ -7,7 +7,7 @@ services:
       dockerfile: dockerfile-infra
     container_name: jenkins
     restart: unless-stopped
-    user: "1004:1005"
+    user: root
     ports:
       - "8080:8080"
       - "50000:50000"
