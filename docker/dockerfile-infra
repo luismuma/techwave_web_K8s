@@ -1,0 +1,24 @@
+# Dockerfile
+FROM jenkins/jenkins:lts
+
+# Ejecutar como root para instalar herramientas
+USER root
+
+# Instalar dependencias necesarias
+RUN apt-get update && \
+    apt-get install -y curl apt-transport-https gnupg lsb-release docker.io && \
+    rm -rf /var/lib/apt/lists/*
+
+# Instalar kubectl
+RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
+    chmod +x kubectl && mv kubectl /usr/local/bin/
+
+# Instalar helm
+RUN curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+# Instalar kind
+RUN curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.25.0/kind-linux-amd64 && \
+    chmod +x kind && mv kind /usr/local/bin/
+
+# Volver a usuario de Jenkins
+USER 1000
