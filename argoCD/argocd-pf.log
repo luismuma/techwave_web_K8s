@@ -1,0 +1,18 @@
+Forwarding from 0.0.0.0:9093 -> 8080
+Handling connection for 9093
+E0323 15:50:59.986255  152859 portforward.go:404] "Unhandled Error" err="error copying from local connection to remote stream: writeto tcp4 127.0.0.1:9093->127.0.0.1:51060: read tcp4 127.0.0.1:9093->127.0.0.1:51060: read: connection reset by peer"
+Handling connection for 9093
+Handling connection for 9093
+E0323 15:51:01.373978  152859 portforward.go:404] "Unhandled Error" err="error copying from local connection to remote stream: writeto tcp4 127.0.0.1:9093->127.0.0.1:51070: read tcp4 127.0.0.1:9093->127.0.0.1:51070: read: connection reset by peer"
+E0323 15:51:01.380600  152859 portforward.go:404] "Unhandled Error" err="error copying from local connection to remote stream: writeto tcp4 127.0.0.1:9093->127.0.0.1:51074: read tcp4 127.0.0.1:9093->127.0.0.1:51074: read: connection reset by peer"
+Handling connection for 9093
+E0323 15:51:01.392542  152859 portforward.go:404] "Unhandled Error" err="error copying from local connection to remote stream: writeto tcp4 127.0.0.1:9093->127.0.0.1:51088: read tcp4 127.0.0.1:9093->127.0.0.1:51088: read: connection reset by peer"
+Handling connection for 9093
+Handling connection for 9093
+Handling connection for 9093
+Handling connection for 9093
+Handling connection for 9093
+Handling connection for 9093
+E0323 15:51:49.254153  152859 portforward.go:391] "Unhandled Error" err="error copying from remote stream to local connection: readfrom tcp4 127.0.0.1:9093->127.0.0.1:42404: write tcp4 127.0.0.1:9093->127.0.0.1:42404: write: broken pipe"
+E0323 15:51:49.254202  152859 portforward.go:391] "Unhandled Error" err="error copying from remote stream to local connection: readfrom tcp4 127.0.0.1:9093->127.0.0.1:42352: write tcp4 127.0.0.1:9093->127.0.0.1:42352: write: broken pipe"
+error: lost connection to pod
