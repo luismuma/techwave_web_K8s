@@ -1,15 +1,8 @@
-name: Build and Push Docker Image
+name: Build and Deploy Docker Image
 
-# 🔹 Se dispara solo cuando termina el workflow de cluster
 on:
-  workflow_run:
-    workflows: ["Create Cluster and Trigger Build"]  # nombre exacto de tu workflow de cluster
-    types:
-      - completed  # solo cuando termina
-
-permissions:
-  contents: write
-
+  push:
+    branches: [ "main" ]
 jobs:
   build:
     runs-on: ubuntu-latest
