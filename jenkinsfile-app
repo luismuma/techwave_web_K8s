@@ -5,7 +5,7 @@ pipeline {
             steps {
                 sh '''
                     CLUSTER_NAME="${1:-argocd}"   # Permite pasar nombre de cluster como argumento
-                    HELM_PATH="$HOME/proyecto_tokio/techwave_web_K8s/helm/flask-app"
+                    HELM_PATH="helm/flask-app"
                     NAMESPACE="${2:-flask-app}"    # Namespace opcional
                     echo "📦 Desplegando app Flask con Helm..."
                     kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
