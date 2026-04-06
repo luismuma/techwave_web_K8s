@@ -56,6 +56,6 @@ jobs:
           git add helm/flask-app/values-green.yaml
           git commit -m "chore: update Docker image to $IMAGE_TAG" || echo "No changes"
           git push https://$GH_PAT@github.com/luismuma/techwave_web_K8s.git HEAD:main || echo "No changes"
-          env:
-            GH_PAT: ${{ secrets.GH_PAT }}
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
         
