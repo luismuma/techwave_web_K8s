@@ -4,6 +4,7 @@ pipeline {
         stage('Execute deploy flask-app') {
             steps {
                 sh '''
+                    PATH_APP_ARGO="argoCD/argo-application.yaml"
                     HELM_PATH="helm/flask-app"
                     NAMESPACE="${2:-flask-app}"    # Namespace opcional
                     echo "📦 Desplegando app Flask con Helm..."
@@ -12,6 +13,8 @@ pipeline {
                     echo "✅ App Flask desplegada correctamente"
 
                     sleep 25
+                    kubectl apply -f "$PATH_APP_ARGO"
+                    sleep 10
                 '''
             }
         }
