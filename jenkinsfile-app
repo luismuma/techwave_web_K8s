@@ -4,7 +4,6 @@ pipeline {
         stage('Execute deploy flask-app') {
             steps {
                 sh '''
-                    CLUSTER_NAME="${1:-argocd}"   # Permite pasar nombre de cluster como argumento
                     HELM_PATH="helm/flask-app"
                     NAMESPACE="${2:-flask-app}"    # Namespace opcional
                     echo "📦 Desplegando app Flask con Helm..."
