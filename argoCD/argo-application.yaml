@@ -7,12 +7,15 @@ spec:
   project: default
   source:
     repoURL: https://github.com/luismuma/techwave_web_K8s.git
-    targetRevision: HEAD
-    path: .
+    targetRevision: main   # mejor usar rama fija que HEAD
+    path: helm/flask-app
+    helm:
+      valueFiles:
+        - values-green.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: argocd
+    namespace: flask-app
   syncPolicy:
     automated:
-      prune: true
-      selfHeal: true
+      prune: true      # elimina recursos que no estén en Git
+      selfHeal: true   # corrige cambios manuales en K8s
