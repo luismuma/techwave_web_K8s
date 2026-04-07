@@ -20,24 +20,17 @@ pipeline {
         }
 
         stage('Register Application in Argo CD') {
-            steps {
-                sh '''
-                    PATH_APP_ARGO="argoCD/argo-application.yaml"
-                    APP_NAME="techwave-web"
+    steps {
+        sh '''
+            PATH_APP_ARGO="argoCD/argo-application.yaml"
 
-                    echo "🚀 Aplicando Application de Argo CD..."
-                    kubectl apply -f "$PATH_APP_ARGO"
+            echo "🚀 Aplicando Application de Argo CD con kubectl..."
+            kubectl apply -f "$PATH_APP_ARGO" -n argocd
 
-                    echo "⏳ Sincronizando aplicación en Argo CD..."
-                    argocd app sync "$APP_NAME" --prune --timeout 300 --retry-limit 3 --self-heal
-
-                    echo "🔍 Esperando a que la aplicación esté Healthy y Synced..."
-                    argocd app wait "$APP_NAME" --health --timeout 300
-
-                    echo "✅ Aplicación registrada y gestionada por Argo CD"
-                '''
-            }
-        }
+            echo "✅ Application registrada en Argo CD. Puedes verificar en la UI: http://localhost:8080"
+        '''
+    }
+}
     }
     post {
         success {
