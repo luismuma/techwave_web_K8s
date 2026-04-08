@@ -44,6 +44,8 @@ jobs:
         run: cat helm/flask-app/values-green.yaml
 
       - name: Commit and push updated values.yaml
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           git config user.name "luismuma"
           git config user.email "luismuma@users.noreply.github.com"
@@ -51,5 +53,4 @@ jobs:
           git add helm/flask-app/values-green.yaml
           git commit -m "chore: update Docker image to $IMAGE_TAG" || exit 0
           git push origin HEAD:main
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
+        
