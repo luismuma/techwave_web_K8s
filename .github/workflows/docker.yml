@@ -56,14 +56,13 @@ jobs:
           git config user.email "lumuma_2025@users.noreply.github.com"
       
           # Configurar remote con token para autenticación
-          git remote set-url origin https://lumuma_2025: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@github.com/luismuma/techwave_web_K8s.git
-      
+          git remote set-url origin https://x-access-token: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@github.com/luismuma/techwave_web_K8s.git
           # Añadir y commitear cambios
           git add helm/flask-app/values-green.yaml
           git commit -m "chore: update Docker image to $IMAGE_TAG" || echo "No changes"
       
           # Push al repo
-          git push origin HEAD:main || echo "No changes"
+          git push origin main || echo "No changes"
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
      
