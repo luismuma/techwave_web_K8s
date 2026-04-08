@@ -51,11 +51,20 @@ jobs:
       # 8️⃣ Commit & push (dispara ArgoCD)
       - name: Commit and push updated values.yaml
         run: |
+          # Configurar usuario git
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
+      
+          # Configurar remote con token para autenticación
+          git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/luismuma/techwave_web_K8s.git
+      
+          # Añadir y commitear cambios
           git add helm/flask-app/values-green.yaml
           git commit -m "chore: update Docker image to $IMAGE_TAG" || echo "No changes"
-          git push https://$GH_PAT@github.com/luismuma/techwave_web_K8s.git HEAD:main || echo "No changes"
+      
+          # Push al repo
+          git push origin HEAD:main || echo "No changes"
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
+     
         
