@@ -11,7 +11,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          persist-credentials: true
+          token: ${{ secrets.GH_PAT }}
+          persist-credentials: false
 
       # 2️⃣ Login Docker Hub
       - name: Docker Hub login
@@ -55,8 +56,6 @@ jobs:
           git config user.name "luismuma"
           git config user.email "luismuma@users.noreply.github.com"
       
-          # Configurar remote con token para autenticación
-          git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/luismuma/techwave_web_K8s.git
           # Añadir y commitear cambios
           git add helm/flask-app/values-green.yaml
           git commit -m "chore: update Docker image to $IMAGE_TAG" || echo "No changes"
