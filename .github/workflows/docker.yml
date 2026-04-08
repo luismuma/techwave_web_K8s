@@ -52,11 +52,11 @@ jobs:
       - name: Commit and push updated values.yaml
         run: |
           # Configurar usuario git
-          git config user.name "luismuma"
-          git config user.email "luismuma@users.noreply.github.com"
+          git config user.name "lumuma_2025"
+          git config user.email "lumuma_2025@users.noreply.github.com"
       
           # Configurar remote con token para autenticación
-          git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/luismuma/techwave_web_K8s.git
+          git remote set-url origin https://lumuma_2025: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@github.com/luismuma/techwave_web_K8s.git
       
           # Añadir y commitear cambios
           git add helm/flask-app/values-green.yaml
