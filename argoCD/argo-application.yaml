@@ -2,19 +2,27 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: techwave-web
-  namespace: argocd   # 👈 donde vive Argo CD
+  namespace: argocd
 spec:
   project: default
+
   source:
     repoURL: https://github.com/luismuma/techwave_web_K8s.git
-    targetRevision: HEAD
-    path: .
+    targetRevision: main   # ✅ FIX: evita HEAD
+    path: helm/flask-app   # ✅ FIX: solo el chart
+    helm:
+      valueFiles:
+        - values-green.yaml
+
   destination:
     server: https://kubernetes.default.svc
-    namespace: flask-app   # 👈 donde se despliega tu app
+    namespace: flask-app
+
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
+
     syncOptions:
       - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
