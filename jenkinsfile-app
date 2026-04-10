@@ -11,10 +11,7 @@ pipeline {
                     kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
                     helm upgrade --install flask-app "$HELM_PATH" -f "$HELM_PATH/values-green.yaml" --namespace "$NAMESPACE"
                     echo "✅ App Flask desplegada correctamente"
-
                     sleep 25
-                    kubectl apply -f "$PATH_APP_ARGO"
-                    sleep 10
                 '''
             }
         }
