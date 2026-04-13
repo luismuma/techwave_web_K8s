@@ -11,6 +11,7 @@ env:
 service:
   type: NodePort
   port: 5000
+  nodePort: 30007
 resources:
   requests:
     cpu: "250m"
