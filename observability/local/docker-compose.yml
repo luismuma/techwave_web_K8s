@@ -6,6 +6,7 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
     restart: unless-stopped
     networks:
       - observability
@@ -16,10 +17,8 @@ services:
     ports:
       - "3100:3100"
     volumes:
+      - loki-data:/loki
       - ./loki-config.yml:/etc/loki/config.yml
-      - ./loki/index:/loki/index
-      - ./loki/chunks:/loki/chunks
-      - ./loki/wal:/loki/wal
     command: -config.file=/etc/loki/config.yml
     restart: unless-stopped
     networks:
@@ -54,3 +53,4 @@ networks:
 volumes:
   grafana-data:
   loki-data:
+  prometheus-data:
