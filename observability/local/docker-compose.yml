@@ -2,8 +2,6 @@
 # Versión final para Linux (TechWave stack)
 # Incluye Prometheus, Loki, Promtail y Grafana
 
-version: "3.9"
-
 services:
   prometheus:
     image: prom/prometheus:latest
@@ -49,19 +47,9 @@ services:
     networks:
       - observability
 
-  # 🔥 AQUÍ ES DONDE LO AÑADES
-  flask-app:
-    build: .
-    container_name: flask-app
-    ports:
-      - "5001:5000"
-    networks:
-      - observability
-
 networks:
   observability:
     driver: bridge
 
 volumes:
   grafana-data:
-  
