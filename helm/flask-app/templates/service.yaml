@@ -12,7 +12,7 @@ spec:
   ports:
     - name: http
       port: {{ .Values.service.port }}
-      targetPort: 5000
+      targetPort: 5001
       protocol: TCP
       {{- if eq .Values.service.type "NodePort" }}
       nodePort: {{ .Values.service.nodePort }}
