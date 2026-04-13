@@ -1,7 +1,3 @@
-# observability/docker-compose.yml
-# Versión final para Linux (TechWave stack)
-# Incluye Prometheus, Loki, Promtail y Grafana
-
 services:
   prometheus:
     image: prom/prometheus:latest
@@ -10,6 +6,7 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    restart: unless-stopped
     networks:
       - observability
 
@@ -24,6 +21,7 @@ services:
       - ./loki/chunks:/loki/chunks
       - ./loki/wal:/loki/wal
     command: -config.file=/etc/loki/config.yml
+    restart: unless-stopped
     networks:
       - observability
 
@@ -34,6 +32,7 @@ services:
       - ./promtail-config.yml:/etc/promtail/config.yml
       - /var/log:/var/log
     command: -config.file=/etc/promtail/config.yml
+    restart: unless-stopped
     networks:
       - observability
 
@@ -44,6 +43,7 @@ services:
       - "3000:3000"
     volumes:
       - grafana-data:/var/lib/grafana
+    restart: unless-stopped
     networks:
       - observability
 
