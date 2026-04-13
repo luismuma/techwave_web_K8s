@@ -9,6 +9,11 @@ pipeline {
                 checkout scm
             }
         }
+        stage('Stop docker container'){
+            steps {
+                sh 'docker compose -f observability/local/docker-compose.yml down'
+            }
+        }
         stage('Verificar Docker') {
             steps {
                 sh 'docker --version'
