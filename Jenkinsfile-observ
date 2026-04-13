@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        COMPOSE_FILE = "observability/docker-compose.yml"
+        COMPOSE_FILE = "observability/local/docker-compose.yml"
     }
     stages {
         stage('Checkout') {
