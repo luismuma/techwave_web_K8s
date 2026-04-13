@@ -10,7 +10,7 @@ scrape_configs:
   - job_name: "flask-app"
     metrics_path: /metrics
     static_configs:
-      - targets: ["172.21.0.2:30007"]
+      - targets: ["flask-app:5001"]
         labels:
           app: flask-app
 
