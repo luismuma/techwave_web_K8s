@@ -20,10 +20,20 @@ pipeline {
                 sh 'docker compose version'
             }
         }
-        stage('Levantar Observability Stack') {
+
+        stage('Preparar Loki dirs') {
             steps {
                 sh """
-                docker compose -f ${COMPOSE_FILE} up -d
+                mkdir -p loki/wal loki/index loki/chunks
+                chmod -R 777 loki
+                """
+            }
+        }
+        stage('Restart Stack') {
+            steps {
+                sh """
+                docker compose -f ${COMPOSE_FILE} down
+                docker compose -f ${COMPOSE_FILE} up -d --build
                 """
             }
         }
