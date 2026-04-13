@@ -29,13 +29,13 @@ spec:
               value: {{ .Values.env.FLASK_ENV | quote }}
           readinessProbe:
             httpGet:
-              path: /
+              path: /metrics
               port: 5000
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /
+              path: /metrics
               port: 5000
             initialDelaySeconds: 15
             periodSeconds: 20
