@@ -99,6 +99,7 @@ variable "namespace" {
 variable "image" {
   description = "Docker image (Docker Hub or registry)"
   type        = string
+  default     = "lumuma2025/techwave_web_k8s"
 }
 
 variable "container_port" {
