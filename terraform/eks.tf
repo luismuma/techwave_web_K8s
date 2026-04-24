@@ -1,17 +1,20 @@
 ################################
-# IAM USER – EKS ADMIN
+# PROVIDER
+################################
+provider "aws" {
+  region = var.region
+}
+
+################################
+# IAM USER – ADMIN
 ################################
 resource "aws_iam_user" "eks_admin" {
   name = var.admin_user_name
-}
-
-resource "aws_iam_user_policy_attachment" "eks_admin_policy" {
-  user       = aws_iam_user.eks_admin.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+  tags = var.tags
 }
 
 ################################
-# IAM ROLE – EKS CLUSTER
+# IAM ROLE – CLUSTER
 ################################
 resource "aws_iam_role" "eks_cluster" {
   name = "${var.cluster_name}-cluster-role"
@@ -24,6 +27,8 @@ resource "aws_iam_role" "eks_cluster" {
       Action = "sts:AssumeRole"
     }]
   })
+
+  tags = var.tags
 }
 
 resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
@@ -37,10 +42,14 @@ resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
 resource "aws_eks_cluster" "this" {
   name     = var.cluster_name
   role_arn = aws_iam_role.eks_cluster.arn
+  version  = var.cluster_version
 
   vpc_config {
-    subnet_ids = aws_subnet.eks[*].id
+    subnet_ids              = var.subnet_ids
+    endpoint_public_access  = var.endpoint_public_access
   }
+
+  tags = var.tags
 
   depends_on = [
     aws_iam_role_policy_attachment.eks_cluster_policy
@@ -48,7 +57,37 @@ resource "aws_eks_cluster" "this" {
 }
 
 ################################
-# IAM ROLE – EKS NODES
+# WAIT FOR CLUSTER
+################################
+resource "time_sleep" "wait_for_cluster" {
+  depends_on      = [aws_eks_cluster.this]
+  create_duration = "30s"
+}
+
+################################
+# DATA SOURCES
+################################
+data "aws_eks_cluster" "this" {
+  name       = aws_eks_cluster.this.name
+  depends_on = [time_sleep.wait_for_cluster]
+}
+
+data "aws_eks_cluster_auth" "this" {
+  name       = aws_eks_cluster.this.name
+  depends_on = [time_sleep.wait_for_cluster]
+}
+
+################################
+# KUBERNETES PROVIDER
+################################
+provider "kubernetes" {
+  host                   = data.aws_eks_cluster.this.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.this.certificate_authority[0].data)
+  token                  = data.aws_eks_cluster_auth.this.token
+}
+
+################################
+# IAM ROLE – NODES
 ################################
 resource "aws_iam_role" "eks_nodes" {
   name = "${var.cluster_name}-node-role"
@@ -61,6 +100,8 @@ resource "aws_iam_role" "eks_nodes" {
       Action = "sts:AssumeRole"
     }]
   })
+
+  tags = var.tags
 }
 
 resource "aws_iam_role_policy_attachment" "eks_nodes_worker" {
@@ -79,22 +120,38 @@ resource "aws_iam_role_policy_attachment" "eks_nodes_ecr" {
 }
 
 ################################
-# KUBERNETES PROVIDER
+# NODE GROUP
 ################################
-data "aws_eks_cluster_auth" "this" {
-  name = aws_eks_cluster.this.name
+resource "aws_eks_node_group" "this" {
+  cluster_name    = aws_eks_cluster.this.name
+  node_group_name = "default"
+  node_role_arn   = aws_iam_role.eks_nodes.arn
+  subnet_ids      = var.subnet_ids
+
+  scaling_config {
+    desired_size = var.desired_size
+    max_size     = var.max_size
+    min_size     = var.min_size
+  }
+
+  instance_types = [var.node_instance_type]
+
+  tags = var.tags
+
+  depends_on = [
+    aws_iam_role_policy_attachment.eks_nodes_worker,
+    aws_iam_role_policy_attachment.eks_nodes_cni,
+    aws_iam_role_policy_attachment.eks_nodes_ecr,
+    time_sleep.wait_for_cluster
+  ]
 }
 
-provider "kubernetes" {
-  host                   = aws_eks_cluster.this.endpoint
-  cluster_ca_certificate = base64decode(aws_eks_cluster.this.certificate_authority[0].data)
-  token                  = data.aws_eks_cluster_auth.this.token
-}
-
 ################################
-# AWS-AUTH – REGISTRO DE NODOS Y ADMIN USER
+# AWS AUTH CONFIGMAP
 ################################
 resource "kubernetes_config_map_v1" "aws_auth" {
+  depends_on = [aws_eks_node_group.this]
+
   metadata {
     name      = "aws-auth"
     namespace = "kube-system"
@@ -106,39 +163,11 @@ resource "kubernetes_config_map_v1" "aws_auth" {
       username = "system:node:{{EC2PrivateDNSName}}"
       groups   = ["system:bootstrappers", "system:nodes"]
     }])
+
     mapUsers = yamlencode([{
       userarn  = aws_iam_user.eks_admin.arn
       username = "eks-admin"
       groups   = ["system:masters"]
     }])
   }
-
-  depends_on = [
-    aws_eks_cluster.this
-  ]
-}
-
-################################
-# EKS NODE GROUP
-################################
-resource "aws_eks_node_group" "this" {
-  cluster_name    = aws_eks_cluster.this.name
-  node_group_name = "default"
-  node_role_arn   = aws_iam_role.eks_nodes.arn
-  subnet_ids      = aws_subnet.eks[*].id
-
-  scaling_config {
-    desired_size = 1
-    max_size     = 2
-    min_size     = 1
-  }
-
-  instance_types = ["t3.micro"]
-
-  depends_on = [
-    aws_iam_role_policy_attachment.eks_nodes_worker,
-    aws_iam_role_policy_attachment.eks_nodes_cni,
-    aws_iam_role_policy_attachment.eks_nodes_ecr,
-    kubernetes_config_map_v1.aws_auth
-  ]
 }
