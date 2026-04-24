@@ -1,6 +1,7 @@
 ################################
-# GENERAL
+# GENERAL AWS / CLUSTER
 ################################
+
 variable "region" {
   description = "AWS region"
   type        = string
@@ -20,8 +21,9 @@ variable "cluster_version" {
 }
 
 ################################
-# ADMIN
+# ADMIN ACCESS
 ################################
+
 variable "admin_user_name" {
   description = "IAM user for EKS admin access"
   type        = string
@@ -29,18 +31,26 @@ variable "admin_user_name" {
 }
 
 ################################
-# NETWORK
+# NETWORKING
 ################################
+
 variable "subnet_ids" {
   description = "List of subnet IDs for EKS"
   type        = list(string)
 }
 
+variable "endpoint_public_access" {
+  description = "Expose EKS API publicly"
+  type        = bool
+  default     = true
+}
+
 ################################
 # NODE GROUP
 ################################
+
 variable "node_instance_type" {
-  description = "EC2 instance type"
+  description = "EC2 instance type for nodes"
   type        = string
   default     = "t3.small"
 }
@@ -61,22 +71,53 @@ variable "max_size" {
 }
 
 ################################
-# ACCESS
-################################
-variable "endpoint_public_access" {
-  description = "Expose EKS API publicly"
-  type        = bool
-  default     = true
-}
-
-################################
 # TAGS
 ################################
+
 variable "tags" {
-  description = "Common resource tags"
+  description = "Common tags"
   type        = map(string)
   default = {
     Environment = "dev"
     Project     = "eks-demo"
   }
+}
+
+################################
+# KUBERNETES APP (TECHWAVE)
+################################
+
+variable "app_name" {
+  description = "Application name"
+  type        = string
+  default     = "techwave_web_aws"
+}
+
+variable "namespace" {
+  description = "Kubernetes namespace"
+  type        = string
+  default     = "default"
+}
+
+variable "image" {
+  description = "Docker image (Docker Hub or registry)"
+  type        = string
+}
+
+variable "container_port" {
+  description = "Internal container port"
+  type        = number
+  default     = 8383
+}
+
+variable "service_port" {
+  description = "External service port (LoadBalancer)"
+  type        = number
+  default     = 8083
+}
+
+variable "replicas" {
+  description = "Number of pods"
+  type        = number
+  default     = 1
 }
