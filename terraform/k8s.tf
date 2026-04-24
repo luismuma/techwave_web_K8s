@@ -1,7 +1,7 @@
 ################################
 # NAMESPACE
 ################################
-resource "kubernetes_namespace" "app" {
+resource "kubernetes_namespace_v1" "app" {
   metadata {
     name = var.namespace
   }
@@ -13,7 +13,7 @@ resource "kubernetes_namespace" "app" {
 resource "kubernetes_deployment" "app" {
   metadata {
     name      = var.app_name
-    namespace = kubernetes_namespace.app.metadata[0].name
+    namespace = kubernetes_namespace_v1.app.metadata[0].name
 
     labels = {
       app = var.app_name
@@ -67,7 +67,11 @@ resource "kubernetes_deployment" "app" {
 resource "kubernetes_service" "app" {
   metadata {
     name      = var.app_name
-    namespace = kubernetes_namespace.app.metadata[0].name
+    namespace = kubernetes_namespace_v1.app.metadata[0].name
+
+    labels = {
+      app = var.app_name
+    }
   }
 
   spec {
@@ -88,5 +92,9 @@ resource "kubernetes_service" "app" {
 # OUTPUT URL
 ################################
 output "app_url" {
-  value = kubernetes_service.app.status[0].load_balancer[0].ingress[0].hostname
+  description = "Public URL of the application LoadBalancer"
+  value = try(
+    kubernetes_service.app.status[0].load_balancer[0].ingress[0].hostname,
+    "pending-loadbalancer"
+  )
 }
