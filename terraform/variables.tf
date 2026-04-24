@@ -34,10 +34,7 @@ variable "admin_user_name" {
 # NETWORKING
 ################################
 
-variable "subnet_ids" {
-  description = "List of subnet IDs for EKS"
-  type        = list(string)
-}
+
 
 variable "endpoint_public_access" {
   description = "Expose EKS API publicly"
