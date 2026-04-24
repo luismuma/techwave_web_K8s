@@ -87,7 +87,7 @@ variable "tags" {
 variable "app_name" {
   description = "Application name"
   type        = string
-  default     = "techwave_web_aws"
+  default     = "techwave-web-aws"
 }
 
 variable "namespace" {
