@@ -1,11 +1,4 @@
 ################################
-# PROVIDER
-################################
-provider "aws" {
-  region = var.region
-}
-
-################################
 # IAM USER – ADMIN
 ################################
 resource "aws_iam_user" "eks_admin" {
