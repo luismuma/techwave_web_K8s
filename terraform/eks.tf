@@ -119,7 +119,7 @@ resource "aws_eks_node_group" "this" {
   cluster_name    = aws_eks_cluster.this.name
   node_group_name = "default"
   node_role_arn   = aws_iam_role.eks_nodes.arn
-  subnet_ids      = var.subnet_ids
+  subnet_ids = aws_subnet.eks[*].id   # ✅ FIX: conexión directa a VPC
 
   scaling_config {
     desired_size = var.desired_size
