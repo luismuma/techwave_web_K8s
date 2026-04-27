@@ -142,38 +142,3 @@ resource "aws_eks_node_group" "this" {
   ]
 }
 
-################################
-# AWS AUTH CONFIGMAP
-################################
-resource "kubernetes_config_map_v1" "aws_auth" {
-  depends_on = [aws_eks_node_group.this]
-
-  metadata {
-    name      = "aws-auth"
-    namespace = "kube-system"
-  }
-
-  data = {
-    mapRoles = yamlencode([{
-      rolearn  = aws_iam_role.eks_nodes.arn
-      username = "system:node:{{EC2PrivateDNSName}}"
-      groups   = ["system:bootstrappers", "system:nodes"]
-    }])
-
-    mapUsers = yamlencode([{
-      userarn  = aws_iam_user.eks_admin.arn
-      username = "eks-admin"
-      groups   = ["system:masters"]
-    }])
-  }
-
-  ###############################################
-  # 🔥 CAMBIO AÑADIDO: evitar recreación del CM
-  ###############################################
-  lifecycle {
-    ignore_changes = [
-      metadata,
-      data
-    ]
-  }
-}
