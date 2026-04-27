@@ -93,7 +93,7 @@ variable "app_name" {
 variable "namespace" {
   description = "Kubernetes namespace"
   type        = string
-  default     = "default"
+  default     = "techwave-web-aws"
 }
 
 variable "image" {
