@@ -1,5 +1,12 @@
 ################################
-# IAM ROLE – ADMIN (REEMPLAZA IAM USER)
+# DATA: CURRENT AWS ACCOUNT
+# (Usado para construir ARNs dinámicos)
+################################
+data "aws_caller_identity" "current" {}
+
+################################
+# IAM ROLE – ADMIN
+# (Reemplaza IAM User para acceso al cluster)
 ################################
 resource "aws_iam_role" "eks_admin" {
   name = "${var.cluster_name}-admin-role"
@@ -18,10 +25,8 @@ resource "aws_iam_role" "eks_admin" {
   tags = var.tags
 }
 
-data "aws_caller_identity" "current" {}
-
 ################################
-# IAM ROLE – CLUSTER
+# IAM ROLE – EKS CLUSTER
 ################################
 resource "aws_iam_role" "eks_cluster" {
   name = "${var.cluster_name}-cluster-role"
@@ -38,6 +43,9 @@ resource "aws_iam_role" "eks_cluster" {
   tags = var.tags
 }
 
+################################
+# ATTACH POLICY – CLUSTER ROLE
+################################
 resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
   role       = aws_iam_role.eks_cluster.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
@@ -52,8 +60,8 @@ resource "aws_eks_cluster" "this" {
   version  = var.cluster_version
 
   vpc_config {
-    subnet_ids              = aws_subnet.eks[*].id
-    endpoint_public_access  = var.endpoint_public_access
+    subnet_ids             = aws_subnet.eks[*].id
+    endpoint_public_access = var.endpoint_public_access
   }
 
   tags = var.tags
@@ -64,7 +72,7 @@ resource "aws_eks_cluster" "this" {
 }
 
 ################################
-# ACCESS ENTRY (REEMPLAZA aws-auth)
+# ACCESS ENTRY (REEMPLAZA aws-auth ConfigMap)
 ################################
 resource "aws_eks_access_entry" "admin" {
   cluster_name  = aws_eks_cluster.this.name
@@ -73,42 +81,7 @@ resource "aws_eks_access_entry" "admin" {
 }
 
 ################################
-# WAIT FOR CLUSTER
-################################
-resource "time_sleep" "wait_for_cluster" {
-  depends_on      = [aws_eks_cluster.this]
-  create_duration = "30s"
-}
-
-################################
-# DATA SOURCES
-################################
-data "aws_eks_cluster" "this" {
-  name       = aws_eks_cluster.this.name
-  depends_on = [time_sleep.wait_for_cluster]
-}
-
-data "aws_eks_cluster_auth" "this" {
-  name       = aws_eks_cluster.this.name
-  depends_on = [time_sleep.wait_for_cluster]
-}
-
-################################
-# KUBERNETES PROVIDER (FIX MODERNO)
-################################
-provider "kubernetes" {
-  host                   = aws_eks_cluster.this.endpoint
-  cluster_ca_certificate = base64decode(aws_eks_cluster.this.certificate_authority[0].data)
-
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    command     = "aws"
-    args        = ["eks", "get-token", "--cluster-name", var.cluster_name]
-  }
-}
-
-################################
-# IAM ROLE – NODES
+# IAM ROLE – NODE GROUP
 ################################
 resource "aws_iam_role" "eks_nodes" {
   name = "${var.cluster_name}-node-role"
@@ -125,6 +98,9 @@ resource "aws_iam_role" "eks_nodes" {
   tags = var.tags
 }
 
+################################
+# NODE IAM POLICIES
+################################
 resource "aws_iam_role_policy_attachment" "eks_nodes_worker" {
   role       = aws_iam_role.eks_nodes.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
@@ -149,8 +125,8 @@ resource "aws_eks_node_group" "this" {
   node_role_arn   = aws_iam_role.eks_nodes.arn
   subnet_ids      = aws_subnet.eks[*].id
 
-  version   = var.cluster_version
-  ami_type  = "AL2_x86_64"
+  version  = var.cluster_version
+  ami_type = "AL2_x86_64"
 
   scaling_config {
     desired_size = var.desired_size
@@ -165,7 +141,20 @@ resource "aws_eks_node_group" "this" {
   depends_on = [
     aws_iam_role_policy_attachment.eks_nodes_worker,
     aws_iam_role_policy_attachment.eks_nodes_cni,
-    aws_iam_role_policy_attachment.eks_nodes_ecr,
-    time_sleep.wait_for_cluster
+    aws_iam_role_policy_attachment.eks_nodes_ecr
   ]
+}
+
+################################
+# KUBERNETES PROVIDER (MODERNO Y SIN CICLOS)
+################################
+provider "kubernetes" {
+  host                   = aws_eks_cluster.this.endpoint
+  cluster_ca_certificate = base64decode(aws_eks_cluster.this.certificate_authority[0].data)
+
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "aws"
+    args        = ["eks", "get-token", "--cluster-name", var.cluster_name]
+  }
 }
