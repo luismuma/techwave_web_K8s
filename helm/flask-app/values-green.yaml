@@ -2,7 +2,7 @@ replicaCount: 2
 version: green
 image:
   repository: lumuma2025/techwave_web_k8s
-  tag: "b7bf3bd2"
+  tag: "46a13da6"
   pullPolicy: Always
 env:
   FLASK_ENV: development
