@@ -11,7 +11,7 @@ variable "region" {
 variable "cluster_name" {
   description = "EKS cluster name"
   type        = string
-  default     = "eks-demo"
+  default     = "eks-techwave-web"
 }
 
 variable "cluster_version" {
@@ -76,7 +76,7 @@ variable "tags" {
   type        = map(string)
   default = {
     Environment = "dev"
-    Project     = "eks-demo"
+    Project     = "eks-techwave-web"
   }
 }
 
