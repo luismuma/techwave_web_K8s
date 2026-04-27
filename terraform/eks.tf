@@ -1,10 +1,24 @@
 ################################
-# IAM USER – ADMIN
+# IAM ROLE – ADMIN (REEMPLAZA IAM USER)
 ################################
-resource "aws_iam_user" "eks_admin" {
-  name = var.admin_user_name
+resource "aws_iam_role" "eks_admin" {
+  name = "${var.cluster_name}-admin-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+
   tags = var.tags
 }
+
+data "aws_caller_identity" "current" {}
 
 ################################
 # IAM ROLE – CLUSTER
@@ -38,7 +52,7 @@ resource "aws_eks_cluster" "this" {
   version  = var.cluster_version
 
   vpc_config {
-    subnet_ids             = aws_subnet.eks[*].id
+    subnet_ids              = aws_subnet.eks[*].id
     endpoint_public_access  = var.endpoint_public_access
   }
 
@@ -47,6 +61,15 @@ resource "aws_eks_cluster" "this" {
   depends_on = [
     aws_iam_role_policy_attachment.eks_cluster_policy
   ]
+}
+
+################################
+# ACCESS ENTRY (REEMPLAZA aws-auth)
+################################
+resource "aws_eks_access_entry" "admin" {
+  cluster_name  = aws_eks_cluster.this.name
+  principal_arn = aws_iam_role.eks_admin.arn
+  type          = "STANDARD"
 }
 
 ################################
@@ -121,8 +144,8 @@ resource "aws_eks_node_group" "this" {
   node_role_arn   = aws_iam_role.eks_nodes.arn
   subnet_ids      = aws_subnet.eks[*].id
 
-  version = var.cluster_version        # ← ✔️ FORZAR VERSIÓN DEL CLUSTER
-  ami_type = "AL2_x86_64"              # ← ✔️ AMI OFICIAL COMPATIBLE
+  version   = var.cluster_version
+  ami_type  = "AL2_x86_64"
 
   scaling_config {
     desired_size = var.desired_size
@@ -141,4 +164,3 @@ resource "aws_eks_node_group" "this" {
     time_sleep.wait_for_cluster
   ]
 }
-
