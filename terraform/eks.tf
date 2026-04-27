@@ -166,4 +166,14 @@ resource "kubernetes_config_map_v1" "aws_auth" {
       groups   = ["system:masters"]
     }])
   }
+
+  ###############################################
+  # 🔥 CAMBIO AÑADIDO: evitar recreación del CM
+  ###############################################
+  lifecycle {
+    ignore_changes = [
+      metadata,
+      data
+    ]
+  }
 }
