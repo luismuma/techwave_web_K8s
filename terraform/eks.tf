@@ -1,12 +1,10 @@
 ################################
 # DATA: CURRENT AWS ACCOUNT
-# (Usado para construir ARNs dinámicos)
 ################################
 data "aws_caller_identity" "current" {}
 
 ################################
 # IAM ROLE – ADMIN
-# (Reemplaza IAM User para acceso al cluster)
 ################################
 resource "aws_iam_role" "eks_admin" {
   name = "${var.cluster_name}-admin-role"
@@ -43,9 +41,6 @@ resource "aws_iam_role" "eks_cluster" {
   tags = var.tags
 }
 
-################################
-# ATTACH POLICY – CLUSTER ROLE
-################################
 resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
   role       = aws_iam_role.eks_cluster.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
@@ -65,10 +60,17 @@ resource "aws_eks_cluster" "this" {
   }
 
   ################################
-  # 🔥 AUTH MODE (CLAVE PARA ACCESS ENTRY)
+  # 🔥 AUTH MODE MODERNO
   ################################
   access_config {
     authentication_mode = "API_AND_CONFIG_MAP"
+  }
+
+  ################################
+  # 🔒 PROTECCIÓN DEL CLUSTER
+  ################################
+  lifecycle {
+    prevent_destroy = true
   }
 
   tags = var.tags
@@ -79,12 +81,34 @@ resource "aws_eks_cluster" "this" {
 }
 
 ################################
-# ACCESS ENTRY (REEMPLAZA aws-auth ConfigMap)
+# ACCESS ENTRY (SIN aws-auth)
 ################################
 resource "aws_eks_access_entry" "admin" {
   cluster_name  = aws_eks_cluster.this.name
   principal_arn = aws_iam_role.eks_admin.arn
   type          = "STANDARD"
+
+  depends_on = [
+    aws_eks_cluster.this
+  ]
+}
+
+################################
+# ADMIN POLICY (MUY IMPORTANTE)
+################################
+resource "aws_eks_access_policy_association" "admin" {
+  cluster_name  = aws_eks_cluster.this.name
+  principal_arn = aws_iam_role.eks_admin.arn
+
+  policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+
+  access_scope {
+    type = "cluster"
+  }
+
+  depends_on = [
+    aws_eks_access_entry.admin
+  ]
 }
 
 ################################
@@ -148,12 +172,13 @@ resource "aws_eks_node_group" "this" {
   depends_on = [
     aws_iam_role_policy_attachment.eks_nodes_worker,
     aws_iam_role_policy_attachment.eks_nodes_cni,
-    aws_iam_role_policy_attachment.eks_nodes_ecr
+    aws_iam_role_policy_attachment.eks_nodes_ecr,
+    aws_eks_cluster.this
   ]
 }
 
 ################################
-# KUBERNETES PROVIDER (MODERNO Y SIN CICLOS)
+# KUBERNETES PROVIDER (SIN CICLOS)
 ################################
 provider "kubernetes" {
   host                   = aws_eks_cluster.this.endpoint
