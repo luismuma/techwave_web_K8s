@@ -60,22 +60,24 @@ resource "aws_eks_cluster" "this" {
   }
 
   ################################
-  # 🔥 CAMBIO IMPORTANTE: AUTH MODE MODERNO (EKS ACCESS ENTRY)
+  # 🔥 AUTH MODE (NECESARIO PARA ACCESS ENTRY)
   ################################
-  #access_config {
-  #  authentication_mode = "API_AND_CONFIG_MAP"
-  #}
+  access_config {
+    authentication_mode                         = "API_AND_CONFIG_MAP"
+    bootstrap_cluster_creator_admin_permissions = true
+  }
 
   ################################
-  # 🔒 CONTROL DE DRIFT (EVITA DESTRUCCIÓN ACCIDENTAL)
+  # 🔒 DRIFT CONTROL (EKS SAFE MODE)
   ################################
   lifecycle {
-    prevent_destroy = true
-
-    # 🟡 IMPORTANTE: evita recreación del cluster por cambios típicos de EKS
     ignore_changes = [
       vpc_config,
-      version
+      version,
+      access_config,
+      kubernetes_network_config,
+      role_arn,
+      upgrade_policy
     ]
   }
 
@@ -87,7 +89,7 @@ resource "aws_eks_cluster" "this" {
 }
 
 ################################
-# ACCESS ENTRY (REEMPLAZA aws-auth ConfigMap)
+# ACCESS ENTRY (REEMPLAZA aws-auth)
 ################################
 resource "aws_eks_access_entry" "admin" {
   cluster_name  = aws_eks_cluster.this.name
@@ -100,7 +102,7 @@ resource "aws_eks_access_entry" "admin" {
 }
 
 ################################
-# ADMIN POLICY (PERMISOS CLUSTER ADMIN)
+# ADMIN POLICY
 ################################
 resource "aws_eks_access_policy_association" "admin" {
   cluster_name  = aws_eks_cluster.this.name
@@ -184,7 +186,7 @@ resource "aws_eks_node_group" "this" {
 }
 
 ################################
-# KUBERNETES PROVIDER (SIN CICLOS)
+# KUBERNETES PROVIDER
 ################################
 provider "kubernetes" {
   host                   = aws_eks_cluster.this.endpoint
