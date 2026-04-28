@@ -20,18 +20,4 @@ provider "aws" {
   region = var.region
 }
 
-################################
-# DATA: EKS CLUSTER (para evitar ciclos)
-################################
-data "aws_eks_cluster" "this" {
-  name = aws_eks_cluster.this.name
-}
-
-################################
-# DATA: EKS AUTH TOKEN
-################################
-data "aws_eks_cluster_auth" "this" {
-  name = aws_eks_cluster.this.name
-}
-
 
