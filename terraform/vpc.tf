@@ -41,8 +41,12 @@ resource "aws_route_table" "eks_public" {
 # ASOCIAR ROUTES A SUBNETS
 ################################
 resource "aws_route_table_association" "eks_public" {
-  count          = length(aws_subnet.eks)
-  subnet_id      = aws_subnet.eks[count.index].id
+  for_each = {
+    for idx, subnet in aws_subnet.eks :
+    idx => subnet
+  }
+
+  subnet_id      = each.value.id
   route_table_id = aws_route_table.eks_public.id
 }
 
