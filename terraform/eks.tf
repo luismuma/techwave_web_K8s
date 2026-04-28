@@ -3,7 +3,16 @@
 ################################
 data "aws_caller_identity" "current" {}
 
+################################
+# DATA: EKS CLUSTER (EVITA CICLOS)
+################################
+data "aws_eks_cluster" "this" {
+  name = aws_eks_cluster.this.name
+}
 
+data "aws_eks_cluster_auth" "this" {
+  name = aws_eks_cluster.this.name
+}
 
 ################################
 # EKS CLUSTER
@@ -125,5 +134,3 @@ resource "aws_eks_node_group" "this" {
     aws_eks_cluster.this
   ]
 }
-
-
