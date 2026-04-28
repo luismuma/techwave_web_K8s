@@ -64,7 +64,7 @@ resource "kubernetes_deployment_v1" "app" {
 ################################
 # SERVICE (LOAD BALANCER)
 ################################
-resource "kubernetes_service" "app" {
+resource "kubernetes_service_v1" "app" {
   metadata {
     name      = var.app_name
     namespace = kubernetes_namespace_v1.app.metadata[0].name
@@ -87,7 +87,6 @@ resource "kubernetes_service" "app" {
     type = "LoadBalancer"
   }
 }
-
 ################################
 # OUTPUT URL
 ################################
