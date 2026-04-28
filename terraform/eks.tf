@@ -64,6 +64,13 @@ resource "aws_eks_cluster" "this" {
     endpoint_public_access = var.endpoint_public_access
   }
 
+  ################################
+  # 🔥 AUTH MODE (CLAVE PARA ACCESS ENTRY)
+  ################################
+  access_config {
+    authentication_mode = "API_AND_CONFIG_MAP"
+  }
+
   tags = var.tags
 
   depends_on = [
