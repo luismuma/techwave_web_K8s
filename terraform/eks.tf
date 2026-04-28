@@ -26,7 +26,6 @@ resource "aws_eks_cluster" "this" {
     subnet_ids             = aws_subnet.eks[*].id
     endpoint_public_access = var.endpoint_public_access
   }
-
   ################################
   # 🔥 AUTH MODE (NECESARIO PARA ACCESS ENTRY)
   ################################
