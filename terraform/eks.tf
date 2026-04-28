@@ -3,48 +3,7 @@
 ################################
 data "aws_caller_identity" "current" {}
 
-################################
-# IAM ROLE – ADMIN
-################################
-resource "aws_iam_role" "eks_admin" {
-  name = "${var.cluster_name}-admin-role"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = {
-        AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-      }
-      Action = "sts:AssumeRole"
-    }]
-  })
-
-  tags = var.tags
-}
-
-################################
-# IAM ROLE – EKS CLUSTER
-################################
-resource "aws_iam_role" "eks_cluster" {
-  name = "${var.cluster_name}-cluster-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = { Service = "eks.amazonaws.com" }
-      Action = "sts:AssumeRole"
-    }]
-  })
-
-  tags = var.tags
-}
-
-resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
-  role       = aws_iam_role.eks_cluster.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
-}
 
 ################################
 # EKS CLUSTER
@@ -117,24 +76,6 @@ resource "aws_eks_access_policy_association" "admin" {
   depends_on = [
     aws_eks_access_entry.admin
   ]
-}
-
-################################
-# IAM ROLE – NODE GROUP
-################################
-resource "aws_iam_role" "eks_nodes" {
-  name = "${var.cluster_name}-node-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = { Service = "ec2.amazonaws.com" }
-      Action = "sts:AssumeRole"
-    }]
-  })
-
-  tags = var.tags
 }
 
 ################################
