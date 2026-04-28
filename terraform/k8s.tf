@@ -87,13 +87,3 @@ resource "kubernetes_service_v1" "app" {
     type = "LoadBalancer"
   }
 }
-################################
-# OUTPUT URL
-################################
-output "app_url" {
-  description = "Public URL of the application LoadBalancer"
-  value = try(
-    kubernetes_service.app.status[0].load_balancer[0].ingress[0].hostname,
-    "pending-loadbalancer"
-  )
-}
