@@ -60,17 +60,24 @@ resource "aws_eks_cluster" "this" {
   }
 
   ################################
-  # 🔥 AUTH MODE MODERNO
+  # 🔥 CAMBIO IMPORTANTE: AUTH MODE MODERNO (EKS ACCESS ENTRY)
   ################################
   access_config {
     authentication_mode = "API_AND_CONFIG_MAP"
   }
 
   ################################
-  # 🔒 PROTECCIÓN DEL CLUSTER
+  # 🔒 CONTROL DE DRIFT (EVITA DESTRUCCIÓN ACCIDENTAL)
   ################################
   lifecycle {
     prevent_destroy = true
+
+    # 🟡 IMPORTANTE: evita recreación del cluster por cambios típicos de EKS
+    ignore_changes = [
+      vpc_config,
+      access_config,
+      version
+    ]
   }
 
   tags = var.tags
@@ -81,7 +88,7 @@ resource "aws_eks_cluster" "this" {
 }
 
 ################################
-# ACCESS ENTRY (SIN aws-auth)
+# ACCESS ENTRY (REEMPLAZA aws-auth ConfigMap)
 ################################
 resource "aws_eks_access_entry" "admin" {
   cluster_name  = aws_eks_cluster.this.name
@@ -94,7 +101,7 @@ resource "aws_eks_access_entry" "admin" {
 }
 
 ################################
-# ADMIN POLICY (MUY IMPORTANTE)
+# ADMIN POLICY (PERMISOS CLUSTER ADMIN)
 ################################
 resource "aws_eks_access_policy_association" "admin" {
   cluster_name  = aws_eks_cluster.this.name
