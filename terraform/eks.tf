@@ -62,9 +62,9 @@ resource "aws_eks_cluster" "this" {
   ################################
   # 🔥 CAMBIO IMPORTANTE: AUTH MODE MODERNO (EKS ACCESS ENTRY)
   ################################
-  access_config {
-    authentication_mode = "API_AND_CONFIG_MAP"
-  }
+  #access_config {
+  #  authentication_mode = "API_AND_CONFIG_MAP"
+  #}
 
   ################################
   # 🔒 CONTROL DE DRIFT (EVITA DESTRUCCIÓN ACCIDENTAL)
@@ -75,7 +75,6 @@ resource "aws_eks_cluster" "this" {
     # 🟡 IMPORTANTE: evita recreación del cluster por cambios típicos de EKS
     ignore_changes = [
       vpc_config,
-      access_config,
       version
     ]
   }
