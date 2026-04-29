@@ -21,6 +21,25 @@ variable "cluster_version" {
 }
 
 ################################
+# 🔥 NUEVO — IAM ROLES EXISTENTES
+################################
+
+variable "eks_cluster_role_arn" {
+  description = "IAM role ARN for EKS cluster"
+  type        = string
+}
+
+variable "eks_node_role_arn" {
+  description = "IAM role ARN for node group"
+  type        = string
+}
+
+variable "eks_admin_role_arn" {
+  description = "IAM role ARN for EKS admin access"
+  type        = string
+}
+
+################################
 # ADMIN ACCESS
 ################################
 
@@ -33,8 +52,6 @@ variable "admin_user_name" {
 ################################
 # NETWORKING
 ################################
-
-
 
 variable "endpoint_public_access" {
   description = "Expose EKS API publicly"
@@ -97,7 +114,7 @@ variable "namespace" {
 }
 
 variable "image" {
-  description = "Docker image (Docker Hub or registry)"
+  description = "Docker image"
   type        = string
   default     = "lumuma2025/techwave_web_k8s"
 }
@@ -109,7 +126,7 @@ variable "container_port" {
 }
 
 variable "service_port" {
-  description = "External service port (LoadBalancer)"
+  description = "External service port"
   type        = number
   default     = 8083
 }
