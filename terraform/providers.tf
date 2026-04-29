@@ -18,8 +18,12 @@ provider "aws" {
   region = var.region
 }
 
-provider "kubernetes" {
-  host                   = data.aws_eks_cluster.this.endpoint
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.this.certificate_authority[0].data)
-  token                  = data.aws_eks_cluster_auth.this.token
-}
+################################
+# ⛔ KUBERNETES PROVIDER DESACTIVADO
+# (SE ACTIVA EN FASE 2)
+################################
+# provider "kubernetes" {
+#   host                   = data.aws_eks_cluster.this.endpoint
+#   cluster_ca_certificate = base64decode(data.aws_eks_cluster.this.certificate_authority[0].data)
+#   token                  = data.aws_eks_cluster_auth.this.token
+# }
