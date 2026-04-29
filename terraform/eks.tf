@@ -4,15 +4,16 @@
 data "aws_caller_identity" "current" {}
 
 ################################
-# DATA: EKS CLUSTER (SIN CICLOS)
+# DATA: EKS CLUSTER (❌ DESACTIVAR TEMPORALMENTE)
 ################################
-data "aws_eks_cluster" "this" {
-  name = var.cluster_name
-}
+# ⛔ ESTO ROMPE EL PLAN SI EL CLUSTER NO EXISTE AÚN
+# data "aws_eks_cluster" "this" {
+#   name = var.cluster_name
+# }
 
-data "aws_eks_cluster_auth" "this" {
-  name = var.cluster_name
-}
+# data "aws_eks_cluster_auth" "this" {
+#   name = var.cluster_name
+# }
 
 ################################
 # EKS CLUSTER
