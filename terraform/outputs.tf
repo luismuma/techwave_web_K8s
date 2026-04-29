@@ -1,5 +1,5 @@
 ################################
-# EKS OUTPUTS
+# EKS OUTPUTS (FASE 1)
 ################################
 
 output "cluster_name" {
@@ -11,13 +11,5 @@ output "cluster_endpoint" {
 }
 
 output "admin_role_arn" {
-  value = aws_iam_role.eks_admin.arn
+  value = var.eks_admin_role_arn
 }
-
-################################
-# ❌ KUBERNETES OUTPUT (DESACTIVADO FASE 1)
-################################
-
-# output "app_url" {
-#   value = kubernetes_service_v1.app.status[0].load_balancer[0].ingress[0].hostname
-# }
