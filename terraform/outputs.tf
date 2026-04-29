@@ -1,19 +1,23 @@
+################################
+# EKS OUTPUTS
+################################
+
 output "cluster_name" {
-  description = "EKS cluster name"
-  value       = aws_eks_cluster.this.name
+  value = var.cluster_name
 }
 
 output "cluster_endpoint" {
-  description = "EKS cluster endpoint"
-  value       = aws_eks_cluster.this.endpoint
+  value = aws_eks_cluster.this.endpoint
 }
 
-
-
-output "app_url" {
-  description = "Public URL of the application LoadBalancer"
-  value = try(
-    kubernetes_service_v1.app.status[0].load_balancer[0].ingress[0].hostname,
-    "pending-loadbalancer"
-  )
+output "admin_role_arn" {
+  value = aws_iam_role.eks_admin.arn
 }
+
+################################
+# ❌ KUBERNETES OUTPUT (DESACTIVADO FASE 1)
+################################
+
+# output "app_url" {
+#   value = kubernetes_service_v1.app.status[0].load_balancer[0].ingress[0].hostname
+# }
