@@ -1,5 +1,5 @@
 ################################
-# EKS OUTPUTS (FASE 1)
+# EKS OUTPUTS (FASE 1 ESTABLE)
 ################################
 
 output "cluster_name" {
@@ -12,4 +12,12 @@ output "cluster_endpoint" {
 
 output "admin_role_arn" {
   value = var.eks_admin_role_arn
+}
+
+output "node_role_arn" {
+  value = var.eks_node_role_arn
+}
+
+output "cluster_role_arn" {
+  value = var.eks_cluster_role_arn
 }
