@@ -77,7 +77,10 @@ jobs:
           git add helm/flask-app/values-green.yaml # Añade el archivo modificado
 
           git commit -m "chore: update image tag to ${IMAGE_TAG} [ci skip]" || exit 0
-          git pull --rebase origin main   # 🔥 Esto evita el error non-fast-forward
-          # Hace commit; si no hay cambios, no falla
-
-          git push origin HEAD:main # Empuja el commit a main
+          # 🔥 Necesario porque GitHub Actions usa detached HEAD
+          git fetch origin main
+          git rebase origin/main
+      
+          # Ahora sí, el push será fast-forward
+          git push origin HEAD:main
+         
