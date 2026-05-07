@@ -25,13 +25,13 @@ resource "azurerm_container_group" "container" {
   name                = "container-demo"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  ip_address_type     = "public"
+  ip_address_type     = "Public"
   dns_name_label      = "micontenedor-demo-tf"
   os_type             = "Linux"
 
   container {
-    name   = "nginx"
-    image  = "nginx:latest"
+    name   = "techwave"
+    image = "mcr.microsoft.com/azuredocs/aci-helloworld"
     cpu    = "0.5"
     memory = "1.5"
 
