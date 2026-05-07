@@ -74,12 +74,17 @@ jobs:
           git add helm/flask-app/values-green.yaml
           git commit -m "chore: update image tag to ${IMAGE_TAG} [ci skip]" || exit 0
 
-          # 🔥 FIX DEFINITIVO: salir del detached HEAD
+          # 🔥 Traer la última versión de main
           git fetch origin main
-          git checkout -b main origin/main
-
-          # 🔥 Reaplicar el commit hecho en detached HEAD
-          git cherry-pick HEAD@{1}
-
-          # 🔥 Push limpio sin non-fast-forward
+      
+          # 🔥 Si NO estamos en main, cambiamos a main
+          git checkout main || git checkout -b main origin/main
+      
+          # 🔥 Rebase para evitar non-fast-forward
+          git rebase origin/main
+      
+          # 🔥 Aplicar el commit que hiciste antes (si existe)
+          git cherry-pick HEAD@{1} || true
+      
+          # 🔥 Push limpio
           git push origin main
