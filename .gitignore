@@ -1,1 +1,13 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Archivos de salida
+*.plan
 observability/local/loki/
