@@ -4,12 +4,10 @@ on:
   push:
     branches:
       - "main"
-    paths-ignore:
-      - helm/flask-app/values-green.yaml
-      
     tags:
       - "v*"
-
+    paths-ignore:
+      - helm/flask-app/values-green.yaml
 jobs:
   build:
     runs-on: ubuntu-latest
