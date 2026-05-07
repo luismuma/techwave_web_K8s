@@ -2,13 +2,18 @@ name: Build and Deploy Docker Image
 
 on:
   push:
-    branches: ["main"]
-    tags: ["v*"]
+    branches:
+      - main
+      - "releases/**"
+    tags:
+      - "v*"
     paths-ignore:
       - helm/flask-app/values-green.yaml
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -18,8 +23,10 @@ jobs:
 
       - name: Debug event
         run: |
-          echo "EVENT: $GITHUB_EVENT_NAME"
-          echo "REF: $GITHUB_REF"
+          echo "EVENT=$GITHUB_EVENT_NAME"
+          echo "REF=$GITHUB_REF"
+          echo "REF_NAME=$GITHUB_REF_NAME"
+          echo "REF_TYPE=$GITHUB_REF_TYPE"
 
       - name: Docker Hub login
         uses: docker/login-action@v3
@@ -30,21 +37,26 @@ jobs:
       - name: Set image tag
         run: |
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            IMAGE_TAG=${GITHUB_REF#refs/tags/}
-            echo "Release detected: $IMAGE_TAG"
+            IMAGE_TAG="${GITHUB_REF#refs/tags/}"
+          elif [[ "$GITHUB_REF" == refs/heads/releases/* ]]; then
+            VERSION="${GITHUB_REF_NAME#releases/}"
+            IMAGE_TAG="v${VERSION}"
+          elif [[ "$GITHUB_REF" == refs/heads/main ]]; then
+            IMAGE_TAG="${GITHUB_SHA::8}"
           else
-            IMAGE_TAG=${GITHUB_SHA::8}
-            echo "CI build detected: $IMAGE_TAG"
+            IMAGE_TAG="${GITHUB_REF_NAME//\//-}"
           fi
+
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+          echo "Release image tag: $IMAGE_TAG"
 
       - name: Build Docker image
         run: |
-          docker build -t lumuma2025/techwave_web_k8s:$IMAGE_TAG -f docker/Dockerfile .
+          docker build -t lumuma2025/techwave_web_k8s:${IMAGE_TAG} -f docker/Dockerfile .
 
       - name: Push Docker image
         run: |
-          docker push lumuma2025/techwave_web_k8s:$IMAGE_TAG
+          docker push lumuma2025/techwave_web_k8s:${IMAGE_TAG}
 
       - name: Install yq
         run: |
@@ -69,18 +81,4 @@ jobs:
 
           git add helm/flask-app/values-green.yaml
           git commit -m "chore: update image tag to ${IMAGE_TAG} [ci skip]" || exit 0
-
-          # 🔥 Traer la última versión de main
-          git fetch origin main
-      
-          # 🔥 Si NO estamos en main, cambiamos a main
-          git checkout main || git checkout -b main origin/main
-      
-          # 🔥 Rebase para evitar non-fast-forward
-          git rebase origin/main
-      
-          # 🔥 Aplicar el commit que hiciste antes (si existe)
-          git cherry-pick HEAD@{1} || true
-      
-          # 🔥 Push limpio
-          git push origin main
+          git push origin HEAD:main
