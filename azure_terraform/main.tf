@@ -25,20 +25,28 @@ resource "azurerm_container_group" "container" {
   name                = "container-demo"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  ip_address_type     = "Public"
-  dns_name_label      = "micontenedor-demo-tf"
-  os_type             = "Linux"
+
+  ip_address_type = "Public"
+  dns_name_label  = "micontenedor-demo-tf"
+  os_type         = "Linux"
 
   container {
     name   = "techwave"
-    image = "lumuma2025/techwave_web_k8s:c7c3eff8"
+    image  = "miacrtechwave123.azurecr.io/techwave_web_k8s:c7c3eff8"
+
     cpu    = "1"
     memory = "1.5"
 
     ports {
-      port     = 80
+      port     = 5001
       protocol = "TCP"
     }
+  }
+
+  image_registry_credential {
+    server   = "miacrtechwave123.azurecr.io"
+    username = var.acr_username
+    password = var.acr_password
   }
 
   tags = {

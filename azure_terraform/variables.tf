@@ -2,12 +2,11 @@ variable "location" {
   default = "West Europe"
 }
 
-variable "docker_username" {
-  type      = string
-  sensitive = true
+variable "acr_username" {
+  type = string
 }
 
-variable "docker_password" {
+variable "acr_password" {
   type      = string
   sensitive = true
 }

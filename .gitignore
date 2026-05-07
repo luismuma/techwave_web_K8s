@@ -7,7 +7,7 @@ override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
-
+terraform.tfvars
 # Archivos de salida
 *.plan
 observability/local/loki/
