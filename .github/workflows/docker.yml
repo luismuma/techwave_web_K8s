@@ -45,20 +45,18 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build \                                 # Construye la imagen Docker
-            -t lumuma2025/techwave_web_k8s:$IMAGE_TAG \  # Etiqueta con el tag generado
-            -f docker/Dockerfile .                       # Usa el Dockerfile del repo
-
+          docker build \ # Construye la imagen Docker
+            -t lumuma2025/techwave_web_k8s:$IMAGE_TAG \ # Etiqueta con el tag generado
+            -f docker/Dockerfile . # Usa el Dockerfile del repo
+          
       - name: Push Docker image
         run: |
-          docker push lumuma2025/techwave_web_k8s:$IMAGE_TAG   # Sube la imagen a Docker Hub
+          docker push lumuma2025/techwave_web_k8s:$IMAGE_TAG  # Sube la imagen a Docker Hub
 
       - name: Install yq
         run: |
-          sudo wget -qO /usr/local/bin/yq \               # Descarga yq (editor YAML)
-            https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
-
-          sudo chmod +x /usr/local/bin/yq                 # Lo hace ejecutable
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
 
       - name: Update Helm values.yaml
         run: |
@@ -66,21 +64,21 @@ jobs:
           # Actualiza el tag de la imagen en el values.yaml de Helm
 
       - name: Debug values file
-        run: cat helm/flask-app/values-green.yaml         # Muestra el archivo actualizado
+        run: cat helm/flask-app/values-green.yaml # Muestra el archivo actualizado
 
       - name: Commit and push updated values.yaml
         env:
-          GH_PAT: ${{ secrets.GH_PAT }}                   # Token personal para push
+          GH_PAT: ${{ secrets.GH_PAT }} # Token personal para push
         run: |
-          git config user.name "luismuma"                 # Configura usuario Git
+          git config user.name "luismuma" # Configura usuario Git
           git config user.email "luismuma@users.noreply.github.com"
+          
+          # Cambia el remote para usar el token
+          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/luismuma/techwave_web_K8s.git
 
-          git remote set-url origin \                     # Cambia el remote para usar el token
-            https://x-access-token:${GH_PAT}@github.com/luismuma/techwave_web_K8s.git
-
-          git add helm/flask-app/values-green.yaml        # Añade el archivo modificado
+          git add helm/flask-app/values-green.yaml # Añade el archivo modificado
 
           git commit -m "chore: update image tag to ${IMAGE_TAG} [ci skip]" || exit 0
           # Hace commit; si no hay cambios, no falla
 
-          git push origin HEAD:main                       # Empuja el commit a main
+          git push origin HEAD:main # Empuja el commit a main
