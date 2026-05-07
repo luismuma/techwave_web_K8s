@@ -6,8 +6,8 @@ on:
       - "main"
     tags:
       - "v*"
-    paths-ignore:
-      - helm/flask-app/values-green.yaml
+  paths-ignore:
+    - helm/flask-app/values-green.yaml
 jobs:
   build:
     runs-on: ubuntu-latest
