@@ -1,55 +1,54 @@
-name: Build and Deploy Docker Image   # Nombre del workflow
+name: Build and Deploy Docker Image
 
 on:
-  push:                               # Se ejecuta cuando hay un push
+  push:
     branches:
-      - "main"                        # Solo si el push es a main
+      - "main"
     tags:
-      - "v*"                          # O si se hace push de un tag tipo v1.0.0
+      - "v*"
     paths-ignore:
-      - helm/flask-app/values-green.yaml   # Ignora cambios en este archivo para evitar loops
+      - helm/flask-app/values-green.yaml
 
 jobs:
   build:
-    runs-on: ubuntu-latest            # El job corre en Ubuntu
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4     # Descarga el repo
+        uses: actions/checkout@v4
         with:
-          persist-credentials: false  # No usa credenciales por defecto
-          fetch-depth: 0              # Trae todo el historial (necesario para tags)
+          persist-credentials: false
+          fetch-depth: 0
 
       - name: Debug event
         run: |
-          echo "EVENT: $GITHUB_EVENT_NAME"   # Muestra el tipo de evento
-          echo "REF: $GITHUB_REF"            # Muestra la referencia (branch o tag)
+          echo "EVENT: $GITHUB_EVENT_NAME"
+          echo "REF: $GITHUB_REF"
 
       - name: Docker Hub login
-        uses: docker/login-action@v3         # Login en Docker Hub
+        uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}   # Usuario desde secretos
-          password: ${{ secrets.DOCKERHUB_TOKEN }}      # Token desde secretos
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Set image tag
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then   # Si es un tag...
-            IMAGE_TAG=${GITHUB_REF#refs/tags/}          # Usa el tag como versión
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            IMAGE_TAG=${GITHUB_REF#refs/tags/}
             echo "Release detected: $IMAGE_TAG"
-          else                                           # Si es un commit normal...
-            IMAGE_TAG=${GITHUB_SHA::8}                   # Usa los primeros 8 chars del SHA
+          else
+            IMAGE_TAG=${GITHUB_SHA::8}
             echo "CI build detected: $IMAGE_TAG"
           fi
-
-          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV     # Exporta la variable para otros pasos
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
       - name: Build Docker image
         run: |
           docker build -t lumuma2025/techwave_web_k8s:$IMAGE_TAG -f docker/Dockerfile .
-          
+
       - name: Push Docker image
         run: |
-          docker push lumuma2025/techwave_web_k8s:$IMAGE_TAG  # Sube la imagen a Docker Hub
+          docker push lumuma2025/techwave_web_k8s:$IMAGE_TAG
 
       - name: Install yq
         run: |
@@ -59,28 +58,28 @@ jobs:
       - name: Update Helm values.yaml
         run: |
           yq -i '.image.tag = strenv(IMAGE_TAG)' helm/flask-app/values-green.yaml
-          # Actualiza el tag de la imagen en el values.yaml de Helm
 
       - name: Debug values file
-        run: cat helm/flask-app/values-green.yaml # Muestra el archivo actualizado
+        run: cat helm/flask-app/values-green.yaml
 
       - name: Commit and push updated values.yaml
         env:
-          GH_PAT: ${{ secrets.GH_PAT }} # Token personal para push
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          git config user.name "luismuma" # Configura usuario Git
+          git config user.name "luismuma"
           git config user.email "luismuma@users.noreply.github.com"
-          
-          # Cambia el remote para usar el token
+
           git remote set-url origin https://x-access-token:${GH_PAT}@github.com/luismuma/techwave_web_K8s.git
 
-          git add helm/flask-app/values-green.yaml # Añade el archivo modificado
-
+          git add helm/flask-app/values-green.yaml
           git commit -m "chore: update image tag to ${IMAGE_TAG} [ci skip]" || exit 0
-          # 🔥 Necesario porque GitHub Actions usa detached HEAD
+
+          # 🔥 FIX DEFINITIVO: salir del detached HEAD
           git fetch origin main
-          git rebase origin/main
-      
-          # Ahora sí, el push será fast-forward
-          git push origin HEAD:main
-         
+          git checkout -b main origin/main
+
+          # 🔥 Reaplicar el commit hecho en detached HEAD
+          git cherry-pick HEAD@{1}
+
+          # 🔥 Push limpio sin non-fast-forward
+          git push origin main
