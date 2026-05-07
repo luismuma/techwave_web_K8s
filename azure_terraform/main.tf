@@ -3,7 +3,7 @@ provider "azurerm" {
 }
 
 resource "azurerm_resource_group" "rg" {
-  name     = "rg-demo"
+  name     = "rg-tokio"
   location = "West Europe"
 }
 
@@ -31,8 +31,8 @@ resource "azurerm_container_group" "container" {
 
   container {
     name   = "techwave"
-    image = "mcr.microsoft.com/azuredocs/aci-helloworld"
-    cpu    = "0.5"
+    image = "lumuma2025/techwave_web_k8s:c7c3eff8"
+    cpu    = "1"
     memory = "1.5"
 
     ports {
