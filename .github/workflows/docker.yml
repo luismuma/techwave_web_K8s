@@ -1,58 +1,86 @@
-name: Build and Deploy Docker Image
-on:
-  push:
-    branches: ["main"]
-    paths-ignore:
-      - helm/flask-app/values-green.yaml
+name: Build and Deploy Docker Image   # Nombre del workflow
 
+on:
+  push:                               # Se ejecuta cuando hay un push
+    branches:
+      - "main"                        # Solo si el push es a main
     tags:
-      - "v*"
+      - "v*"                          # O si se hace push de un tag tipo v1.0.0
+    paths-ignore:
+      - helm/flask-app/values-green.yaml   # Ignora cambios en este archivo para evitar loops
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest            # El job corre en Ubuntu
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4     # Descarga el repo
         with:
-          persist-credentials: false
-          fetch-depth: 0
+          persist-credentials: false  # No usa credenciales por defecto
+          fetch-depth: 0              # Trae todo el historial (necesario para tags)
+
+      - name: Debug event
+        run: |
+          echo "EVENT: $GITHUB_EVENT_NAME"   # Muestra el tipo de evento
+          echo "REF: $GITHUB_REF"            # Muestra la referencia (branch o tag)
 
       - name: Docker Hub login
-        uses: docker/login-action@v3
+        uses: docker/login-action@v3         # Login en Docker Hub
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}   # Usuario desde secretos
+          password: ${{ secrets.DOCKERHUB_TOKEN }}      # Token desde secretos
+
+      - name: Set image tag
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then   # Si es un tag...
+            IMAGE_TAG=${GITHUB_REF#refs/tags/}          # Usa el tag como versión
+            echo "Release detected: $IMAGE_TAG"
+          else                                           # Si es un commit normal...
+            IMAGE_TAG=${GITHUB_SHA::8}                   # Usa los primeros 8 chars del SHA
+            echo "CI build detected: $IMAGE_TAG"
+          fi
+
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV     # Exporta la variable para otros pasos
 
       - name: Build Docker image
         run: |
-          IMAGE_TAG=${GITHUB_SHA::8}
-          docker build -t lumuma2025/techwave_web_k8s:$IMAGE_TAG -f docker/Dockerfile .
-          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+          docker build \                                 # Construye la imagen Docker
+            -t lumuma2025/techwave_web_k8s:$IMAGE_TAG \  # Etiqueta con el tag generado
+            -f docker/Dockerfile .                       # Usa el Dockerfile del repo
 
       - name: Push Docker image
         run: |
-          docker push lumuma2025/techwave_web_k8s:$IMAGE_TAG
+          docker push lumuma2025/techwave_web_k8s:$IMAGE_TAG   # Sube la imagen a Docker Hub
 
       - name: Install yq
         run: |
-          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
-          sudo chmod +x /usr/local/bin/yq
+          sudo wget -qO /usr/local/bin/yq \               # Descarga yq (editor YAML)
+            https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+
+          sudo chmod +x /usr/local/bin/yq                 # Lo hace ejecutable
 
       - name: Update Helm values.yaml
         run: |
           yq -i '.image.tag = strenv(IMAGE_TAG)' helm/flask-app/values-green.yaml
+          # Actualiza el tag de la imagen en el values.yaml de Helm
 
       - name: Debug values file
-        run: cat helm/flask-app/values-green.yaml
+        run: cat helm/flask-app/values-green.yaml         # Muestra el archivo actualizado
 
       - name: Commit and push updated values.yaml
         env:
-          GH_PAT: ${{ secrets.GH_PAT }}
+          GH_PAT: ${{ secrets.GH_PAT }}                   # Token personal para push
         run: |
-          git config user.name "luismuma"
+          git config user.name "luismuma"                 # Configura usuario Git
           git config user.email "luismuma@users.noreply.github.com"
-          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/luismuma/techwave_web_K8s.git
-          git add helm/flask-app/values-green.yaml
-          git commit -m "chore: update image [ci skip]" || exit 0
-          git push origin HEAD:main
-        
+
+          git remote set-url origin \                     # Cambia el remote para usar el token
+            https://x-access-token:${GH_PAT}@github.com/luismuma/techwave_web_K8s.git
+
+          git add helm/flask-app/values-green.yaml        # Añade el archivo modificado
+
+          git commit -m "chore: update image tag to ${IMAGE_TAG} [ci skip]" || exit 0
+          # Hace commit; si no hay cambios, no falla
+
+          git push origin HEAD:main                       # Empuja el commit a main
