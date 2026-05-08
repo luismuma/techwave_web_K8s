@@ -27,18 +27,27 @@ spec:
           env:
             - name: FLASK_ENV
               value: {{ .Values.env.FLASK_ENV | quote }}
+
+          securityContext:                # ← Añadido: bloque de seguridad para evitar root
+            runAsUser: 1000               # ← Añadido: UID del usuario 'desarrollador'
+            runAsGroup: 1000              # ← Añadido: GID del usuario 'desarrollador'
+            runAsNonRoot: true            # ← Añadido: obliga a Kubernetes a rechazar root
+            allowPrivilegeEscalation: false  # ← Añadido: evita que el proceso gane privilegios
+
           readinessProbe:
             httpGet:
               path: /metrics
               port: 5001
             initialDelaySeconds: 5
             periodSeconds: 10
+
           livenessProbe:
             httpGet:
               path: /metrics
               port: 5001
             initialDelaySeconds: 15
             periodSeconds: 20
+
           resources:
             requests:
               cpu: {{ .Values.resources.requests.cpu }}
