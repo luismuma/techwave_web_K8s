@@ -152,7 +152,8 @@ jobs:
           git config user.name "luismuma"
           git config user.email "luismuma@users.noreply.github.com"
       
-          git add "$ARGO_FILE"
+         
+          git add "${ARGO_FILE#argo_infra/}"
           git commit -m "chore: update ArgoCD targetRevision to ${TARGET_REVISION} [ci skip]" || exit 0
           git push origin HEAD
 
