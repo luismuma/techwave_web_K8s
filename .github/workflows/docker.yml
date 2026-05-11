@@ -151,7 +151,7 @@ jobs:
             FILE="argo_infra/argoCD/argo-application-green.yaml"
             VERSION="${GITHUB_REF_NAME#releases/}"
             TAG="v${VERSION}"
-            yq -i '.spec.source.targetRevision = "'"$TAG"'"' $FILE
+            yq -i '.spec.source.targetRevision = "'"$VERSION"'"' $FILE
             echo "TARGET_REVISION=$TAG" >> $GITHUB_ENV
             echo "ARGO_FILE=$FILE" >> $GITHUB_ENV
           fi
