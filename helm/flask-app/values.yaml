@@ -1,3 +1,4 @@
+releaseName: flask-app-blue
 replicaCount: 2
 version: bdfcafcc
 image:
