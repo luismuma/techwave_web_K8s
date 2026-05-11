@@ -114,6 +114,26 @@ jobs:
       - name: Debug values file
         run: | 
           cat $VALUES_FILE
+          
+      - name: Update ArgoCD Application targetRevision
+        if: startsWith(github.ref, 'refs/heads/releases/')
+        run: |
+          VERSION="${GITHUB_REF_NAME#releases/}"
+          yq -i '.spec.source.targetRevision = "release/'"$VERSION"'"' argocd/argo.application.yaml
+
+      - name: Commit and push updated ArgoCD Application
+        if: startsWith(github.ref, 'refs/heads/releases/')
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          git config user.name "luismuma"
+          git config user.email "luismuma@users.noreply.github.com"
+
+          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/luismuma/techwave_web_infra.git
+
+          git add argocd/argo.application.yaml
+          git commit -m "chore: update ArgoCD targetRevision to release/${VERSION} [ci skip]" || exit 0
+          git push origin HEAD
 
       - name: Commit and push updated values.yaml
         env:
