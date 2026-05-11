@@ -142,20 +142,21 @@ jobs:
             echo "ARGO_FILE=$FILE" >> $GITHUB_ENV
           fi
 
-
       - name: Commit and push updated ArgoCD Application
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/releases/')
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
+          cd argo_infra
+      
           git config user.name "luismuma"
           git config user.email "luismuma@users.noreply.github.com"
       
-          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/luismuma/techwave_web_infra.git
-      
-          git add $ARGO_FILE
+          git add "$ARGO_FILE"
           git commit -m "chore: update ArgoCD targetRevision to ${TARGET_REVISION} [ci skip]" || exit 0
           git push origin HEAD
+
+      
 
       
     
