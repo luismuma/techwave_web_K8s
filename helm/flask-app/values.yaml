@@ -1,8 +1,8 @@
 replicaCount: 2
-version: 82373bdd
+version: bdfcafcc
 image:
   repository: lumuma2025/techwave_web_k8s
-  tag: "82373bdd"
+  tag: "bdfcafcc"
   pullPolicy: Always
 env:
   FLASK_ENV: production
