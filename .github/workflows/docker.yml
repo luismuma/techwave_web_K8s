@@ -120,6 +120,7 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME#releases/}"
           yq -i '.spec.source.targetRevision = "release/'"$VERSION"'"' argocd/argo.application.yaml
+          yq -i '.version = strenv(IMAGE_TAG)' $VALUES_FILE
 
       - name: Commit and push updated ArgoCD Application
         if: startsWith(github.ref, 'refs/heads/releases/')
