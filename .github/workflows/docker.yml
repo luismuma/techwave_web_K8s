@@ -117,36 +117,38 @@ jobs:
           cat $VALUES_FILE
           
       - name: Update ArgoCD Application targetRevision
-        if: startsWith(github.ref, 'refs/heads/releases/')
+        if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/releases/')
         run: |
-          VERSION="${GITHUB_REF_NAME#releases/}"
-          yq -i '.spec.source.targetRevision = "release/'"$VERSION"'"' argocd/argo.application.yaml
+          if [[ "$GITHUB_REF" == refs/heads/main ]]; then
+            FILE="argocd/argo-application.yaml"
+            SHORT_SHA="${GITHUB_SHA::8}"
+            yq -i '.spec.source.targetRevision = "'"$SHORT_SHA"'"' $FILE
+            echo "TARGET_REVISION=$SHORT_SHA" >> $GITHUB_ENV
+            echo "ARGO_FILE=$FILE" >> $GITHUB_ENV
+      
+          elif [[ "$GITHUB_REF" == refs/heads/releases/* ]]; then
+            FILE="argocd/argo-application-green.yaml"
+            VERSION="${GITHUB_REF_NAME#releases/}"
+            TAG="v${VERSION}"
+            yq -i '.spec.source.targetRevision = "'"$TAG"'"' $FILE
+            echo "TARGET_REVISION=$TAG" >> $GITHUB_ENV
+            echo "ARGO_FILE=$FILE" >> $GITHUB_ENV
+          fi
+
 
       - name: Commit and push updated ArgoCD Application
-        if: startsWith(github.ref, 'refs/heads/releases/')
+        if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/releases/')
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           git config user.name "luismuma"
           git config user.email "luismuma@users.noreply.github.com"
-
+      
           git remote set-url origin https://x-access-token:${GH_PAT}@github.com/luismuma/techwave_web_infra.git
-
-          git add argocd/argo.application.yaml
-          git commit -m "chore: update ArgoCD targetRevision to release/${VERSION} [ci skip]" || exit 0
+      
+          git add $ARGO_FILE
+          git commit -m "chore: update ArgoCD targetRevision to ${TARGET_REVISION} [ci skip]" || exit 0
           git push origin HEAD
 
-      - name: Commit and push updated values.yaml
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
-        run: |
-          git config user.name "luismuma"
-          git config user.email "luismuma@users.noreply.github.com"
-
-          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/luismuma/techwave_web_K8s.git
-
-          git add $VALUES_FILE
-          git commit -m "chore: update image tag to ${IMAGE_TAG} [ci skip]" || exit 0
-          git push origin HEAD
       
     
