@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-green
+  labels:
+    app: {{ .Release.Name }}
+    version: green
+
+spec:
+  replicas: {{ .Values.replicaCount }}
+
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+      version: green
+
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+        version: green
+
+    spec:
+      containers:
+        - name: flask
+
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          ports:
+            - containerPort: 5001
+              name: http
+
+          env:
+            - name: FLASK_ENV
+              value: {{ .Values.env.FLASK_ENV | quote }}
+
+            - name: APP_VERSION
+              value: "green"
+
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: 5001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: 5001
+            initialDelaySeconds: 15
+            periodSeconds: 20
+
+          resources:
+            requests:
+              cpu: {{ .Values.resources.requests.cpu }}
+              memory: {{ .Values.resources.requests.memory }}
+
+            limits:
+              cpu: {{ .Values.resources.limits.cpu }}
+              memory: {{ .Values.resources.limits.memory }}
