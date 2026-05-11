@@ -1,3 +1,4 @@
+releaseName: flask-app-green
 replicaCount: 2
 version: green
 image:
