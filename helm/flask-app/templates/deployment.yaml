@@ -1,10 +1,12 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
-  name: {{ .Release.Name }}-blue
+  name: {{ .Release.Name }}-{{ .Values.version }}
+
   labels:
     app: {{ .Release.Name }}
-    version: blue
+    version: {{ .Values.version }}
 
 spec:
   replicas: {{ .Values.replicaCount }}
@@ -12,19 +14,20 @@ spec:
   selector:
     matchLabels:
       app: {{ .Release.Name }}
-      version: blue
+      version: {{ .Values.version }}
 
   template:
     metadata:
       labels:
         app: {{ .Release.Name }}
-        version: blue
+        version: {{ .Values.version }}
 
     spec:
       containers:
         - name: flask
 
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+
           imagePullPolicy: {{ .Values.image.pullPolicy }}
 
           ports:
@@ -36,7 +39,7 @@ spec:
               value: {{ .Values.env.FLASK_ENV | quote }}
 
             - name: APP_VERSION
-              value: "blue"
+              value: {{ .Values.version | quote }}
 
           securityContext:
             runAsUser: 1000
