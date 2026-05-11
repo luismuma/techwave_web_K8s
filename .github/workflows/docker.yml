@@ -81,12 +81,39 @@ jobs:
           sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
           sudo chmod +x /usr/local/bin/yq
 
+        # --------------------------------
+      # SELECT VALUES FILE
+      # --------------------------------
+      - name: Select values file
+        run: |
+
+          if [[ "$GITHUB_REF" == refs/heads/main ]]; then
+
+            VALUES_FILE="helm/flask-app/values.yaml"
+            RELEASE_NAME="myapp-blue"
+
+          elif [[ "$GITHUB_REF" == refs/heads/releases/* ]]; then
+
+            VALUES_FILE="helm/flask-app/values-green.yaml"
+            RELEASE_NAME="myapp-green"
+
+          else
+
+            echo "Unsupported branch"
+            exit 1
+
+          fi
+
+          echo "VALUES_FILE=$VALUES_FILE" >> $GITHUB_ENV
+          echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
+          
       - name: Update Helm values.yaml
         run: |
-          yq -i '.image.tag = strenv(IMAGE_TAG)' helm/flask-app/values-green.yaml
+          yq -i '.image.tag = strenv(IMAGE_TAG)' $VALUES_FILE
 
       - name: Debug values file
-        run: cat helm/flask-app/values-green.yaml
+        run: | 
+          cat $VALUES_FILE
 
       - name: Commit and push updated values.yaml
         env:
@@ -97,6 +124,14 @@ jobs:
 
           git remote set-url origin https://x-access-token:${GH_PAT}@github.com/luismuma/techwave_web_K8s.git
 
-          git add helm/flask-app/values-green.yaml
+          git add $VALUES_FILE
           git commit -m "chore: update image tag to ${IMAGE_TAG} [ci skip]" || exit 0
-          git push origin HEAD:main
+          git push origin HEAD
+
+    # --------------------------------
+      # HELM DEPLOY
+      # --------------------------------
+      - name: Helm upgrade
+        run: |
+          helm upgrade --install $RELEASE_NAME ./helm/flask-app \
+            -f $VALUES_FILE
