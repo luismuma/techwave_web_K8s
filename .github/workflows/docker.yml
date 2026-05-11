@@ -120,14 +120,14 @@ jobs:
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/releases/')
         run: |
           if [[ "$GITHUB_REF" == refs/heads/main ]]; then
-            FILE="argocd/argo-application.yaml"
+            FILE="argocd/argo-application-blue.yaml"
             SHORT_SHA="${GITHUB_SHA::8}"
             yq -i '.spec.source.targetRevision = "'"$SHORT_SHA"'"' $FILE
             echo "TARGET_REVISION=$SHORT_SHA" >> $GITHUB_ENV
             echo "ARGO_FILE=$FILE" >> $GITHUB_ENV
       
           elif [[ "$GITHUB_REF" == refs/heads/releases/* ]]; then
-            FILE="argocd/argo-application-green.yaml"
+            FILE="argocd/argo-application.yaml"
             VERSION="${GITHUB_REF_NAME#releases/}"
             TAG="v${VERSION}"
             yq -i '.spec.source.targetRevision = "'"$TAG"'"' $FILE
