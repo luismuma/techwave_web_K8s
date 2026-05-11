@@ -9,6 +9,7 @@ on:
       - "v*"
     paths-ignore:
       - helm/flask-app/values-green.yaml
+      - helm/flask-app/values.yaml
 
 jobs:
   build:
@@ -115,6 +116,19 @@ jobs:
       - name: Debug values file
         run: | 
           cat $VALUES_FILE
+      - name: Commit and push updated Helm values
+        if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/releases/')
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          git config user.name "luismuma"
+          git config user.email "luismuma@users.noreply.github.com"
+      
+          git add $VALUES_FILE
+          git commit -m "chore: update Helm values to ${IMAGE_TAG} [ci skip]" || exit 0
+      
+          git push https://x-access-token:${GH_PAT}@github.com/luismuma/techwave_web_K8s.git HEAD
+
       - name: Clone ArgoCD infra repo
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
