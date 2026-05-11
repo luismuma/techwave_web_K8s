@@ -1,38 +1,48 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-blue
   labels:
     app: {{ .Release.Name }}
-    version: {{ .Values.version }}
+    version: blue
+
 spec:
   replicas: {{ .Values.replicaCount }}
+
   selector:
     matchLabels:
       app: {{ .Release.Name }}
-      version: {{ .Values.version }}
+      version: blue
+
   template:
     metadata:
       labels:
         app: {{ .Release.Name }}
-        version: {{ .Values.version }}
+        version: blue
+
     spec:
       containers:
         - name: flask
+
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+
           ports:
             - containerPort: 5001
               name: http
+
           env:
             - name: FLASK_ENV
               value: {{ .Values.env.FLASK_ENV | quote }}
 
-          securityContext:                # ← Añadido: bloque de seguridad para evitar root
-            runAsUser: 1000               # ← Añadido: UID del usuario 'desarrollador'
-            runAsGroup: 1000              # ← Añadido: GID del usuario 'desarrollador'
-            runAsNonRoot: true            # ← Añadido: obliga a Kubernetes a rechazar root
-            allowPrivilegeEscalation: false  # ← Añadido: evita que el proceso gane privilegios
+            - name: APP_VERSION
+              value: "blue"
+
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
 
           readinessProbe:
             httpGet:
@@ -52,6 +62,7 @@ spec:
             requests:
               cpu: {{ .Values.resources.requests.cpu }}
               memory: {{ .Values.resources.requests.memory }}
+
             limits:
               cpu: {{ .Values.resources.limits.cpu }}
               memory: {{ .Values.resources.limits.memory }}
