@@ -148,7 +148,7 @@ jobs:
             echo "ARGO_FILE=$FILE" >> $GITHUB_ENV
       
           elif [[ "$GITHUB_REF" == refs/heads/releases/* ]]; then
-            FILE="argo_infra/argoCD/argo-application.yaml"
+            FILE="argo_infra/argoCD/argo-application-green.yaml"
             VERSION="${GITHUB_REF_NAME#releases/}"
             TAG="v${VERSION}"
             yq -i '.spec.source.targetRevision = "'"$TAG"'"' $FILE
