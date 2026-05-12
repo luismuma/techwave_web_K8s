@@ -174,29 +174,7 @@ jobs:
           git commit -m "chore: update ArgoCD targetRevision to ${TARGET_REVISION} [ci skip]" || exit 0
           git push https://x-access-token:${GH_PAT}@github.com/luismuma/techwave_web_infra.git HEAD:main
           
-      - name: Configure kubeconfig
-        run: |
-          mkdir -p $HOME/.kube
-          echo "${KUBECONFIG_CONTENT}" > $HOME/.kube/config
-          chmod 600 $HOME/.kube/config
-        env:
-          KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG }}
-          
-      - name: Debug cluster access
-        run: |
-          kubectl config view
-          kubectl cluster-info
-          
-      # --------------------------------
-      # APPLY ARGOCD APPLICATION
-      # --------------------------------
-      - name: Apply ArgoCD Application
-        if: startsWith(github.ref, 'refs/heads/releases/')
-        run: |
-          echo "Applying ArgoCD green application..."
-          kubectl apply -f argo_infra/argoCD/argo-application-green.yaml
-          echo "Application applied successfully"
-
+    
       
 
       
