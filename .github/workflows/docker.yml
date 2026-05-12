@@ -94,7 +94,7 @@ jobs:
             RELEASE_NAME="myapp-blue"
 
           elif [[ "$GITHUB_REF" == refs/heads/releases/* ]]; then
-
+            echo "Releases branch"
             VALUES_FILE="helm/flask-app/values-green.yaml"
             RELEASE_NAME="myapp-green"
 
@@ -141,6 +141,7 @@ jobs:
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/releases/')
         run: |
           if [[ "$GITHUB_REF" == refs/heads/main ]]; then
+            echo "main branch"
             FILE="argo_infra/argoCD/argo-application-blue.yaml"
             SHORT_SHA="${GITHUB_SHA::8}"
             TAG="main"
@@ -149,6 +150,7 @@ jobs:
             echo "ARGO_FILE=$FILE" >> $GITHUB_ENV
       
           elif [[ "$GITHUB_REF" == refs/heads/releases/* ]]; then
+            echo "Release branch"
             FILE="argo_infra/argoCD/argo-application-green.yaml"
             VERSION="${GITHUB_REF_NAME#releases/}"
             TAG="releases/${VERSION}"
@@ -170,8 +172,9 @@ jobs:
          
           git add "${ARGO_FILE#argo_infra/}"
           git commit -m "chore: update ArgoCD targetRevision to ${TARGET_REVISION} [ci skip]" || exit 0
-          git push origin HEAD
-
+          git push https://x-access-token:${GH_PAT}@github.com/luismuma/techwave_web_infra.git HEAD:main
+          
+    
       
 
       
