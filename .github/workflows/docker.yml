@@ -22,6 +22,14 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
+      # -----------------------------------------------------------------
+      # AQUÍ SE AGREGA GITLEAKS
+      # -----------------------------------------------------------------
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Debug event
         run: |
           echo "EVENT=$GITHUB_EVENT_NAME"
@@ -82,7 +90,7 @@ jobs:
           sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
           sudo chmod +x /usr/local/bin/yq
 
-        # --------------------------------
+      # --------------------------------
       # SELECT VALUES FILE
       # --------------------------------
       - name: Select values file
