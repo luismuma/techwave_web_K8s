@@ -2,8 +2,9 @@ FROM python:3.11-slim
 # Crear usuario no root
 RUN useradd -m desarrollador
 WORKDIR /app
-# Instalar poetry como root (solo en build)
-RUN pip install poetry
+
+# Instalar poetry y asegurar una versión limpia y segura de wheel
+RUN pip install --no-cache-dir --upgrade pip wheel poetry
 
 COPY pyproject.toml poetry.lock ./
 
