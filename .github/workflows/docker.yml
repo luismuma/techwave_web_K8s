@@ -81,7 +81,9 @@ jobs:
         run: |
           docker build -t lumuma2025/techwave_web_k8s:${IMAGE_TAG} -f docker/Dockerfile .
 
-      # ---  TRIVY ---
+      # --------------------------------
+      # TRIVY
+      # --------------------------------
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
