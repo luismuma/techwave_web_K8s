@@ -4,7 +4,7 @@ RUN useradd -m desarrollador
 WORKDIR /app
 
 # Instalar poetry y asegurar una versión limpia y segura de wheel
-RUN pip install --no-cache-dir --upgrade pip wheel poetry
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel poetry
 
 COPY pyproject.toml poetry.lock ./
 
