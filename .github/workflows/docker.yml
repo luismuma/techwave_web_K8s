@@ -90,7 +90,7 @@ jobs:
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
           exit-code: '1'          # Si encuentra vulnerabilidades CRITICAL o HIGH, el pipeline fallará aquí.
-          ignore-unfixed: true    # Oculta fallos que no tienen un parche de actualización listo en el mercado.
+          ignore-unfixed: true    # Oculta fallos que no tienen un parche de actualización en el mercado.
 
       - name: Push Docker image
         run: |
