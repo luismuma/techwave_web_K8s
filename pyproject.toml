@@ -2,6 +2,7 @@
 name = "techwave-web"
 version = "0.1.0"
 description = "Proyecto Final DEVOPS"
+package-mode = false
 authors = [
     {name = "desarrollador",email = "luis196909@outlook.es"}
 ]
