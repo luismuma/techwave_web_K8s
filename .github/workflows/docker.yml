@@ -9,7 +9,6 @@ on:
     paths-ignore:
       - helm/flask-app/values-green.yaml
       - helm/flask-app/values.yaml
-
 jobs:
   build:
     runs-on: ubuntu-latest
