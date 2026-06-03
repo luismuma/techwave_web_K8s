@@ -1,9 +1,9 @@
 releaseName: flask-app-green
 replicaCount: 2
-version: v2.0.1
+version: v5.0.1
 image:
   repository: lumuma2025/techwave_web_k8s
-  tag: "v2.0.1"
+  tag: "v5.0.1"
   pullPolicy: Always
 env:
   FLASK_ENV: development
