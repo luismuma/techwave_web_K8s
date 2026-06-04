@@ -1,9 +1,9 @@
 releaseName: flask-app-blue
 replicaCount: 2
-version: 24d75b4a
+version: 4cd6306c
 image:
   repository: lumuma2025/techwave_web_k8s
-  tag: "24d75b4a"
+  tag: "4cd6306c"
   pullPolicy: Always
 env:
   FLASK_ENV: production
