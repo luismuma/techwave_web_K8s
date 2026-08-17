@@ -1,16 +1,15 @@
 name: Check Keycloak User
 
 on:
+  push:
+    branches:
+      - main
+      - "releases/**"
+
   workflow_dispatch:
 
 jobs:
-
-  # ==============================================================
-  # AUTENTICACIÓN DEL USUARIO EN KEYCLOAK
-  # ==============================================================
-
   keycloak-auth:
-
     runs-on: self-hosted
 
     steps:
