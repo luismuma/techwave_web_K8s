@@ -1,103 +1,461 @@
-
-name: Check Keycloak
+name: Check Keycloak User
 
 on:
-  push:
-    branches:
-      - main
-      - "releases/**"
+  workflow_dispatch:
 
 jobs:
-  keycloak-check:
-    # Este runner está dentro de WSL2
+
+  # ==============================================================
+  # AUTENTICACIÓN DEL USUARIO EN KEYCLOAK
+  # ==============================================================
+
+  keycloak-auth:
+
     runs-on: self-hosted
 
     steps:
 
-      # ================================================================
+      # ============================================================
       # CHECKOUT
-      # ================================================================
+      # ============================================================
 
       - name: Checkout repository
         uses: actions/checkout@v4
 
 
-      # ================================================================
+      # ============================================================
       # CHECK KEYCLOAK
-      # ================================================================
+      # ============================================================
 
       - name: Check Keycloak
+        env:
+          KEYCLOAK_URL: "http://keycloak.local:8080"
+          KEYCLOAK_REALM: "devops"
+
         run: |
+
+          set -euo pipefail
+
           echo "========================================"
-          echo "Checking Keycloak..."
+          echo "CHECKING KEYCLOAK"
           echo "========================================"
 
-          KEYCLOAK_URL="http://keycloak.local:8080"
-          REALM="devops"
+          echo "Keycloak:"
+          echo "$KEYCLOAK_URL"
 
-          echo "Keycloak URL: $KEYCLOAK_URL"
-          echo "Realm: $REALM"
+          echo "Realm:"
+          echo "$KEYCLOAK_REALM"
 
           echo ""
-          echo "Checking Keycloak OIDC endpoint..."
 
-          curl --fail \
+          curl \
+            --fail \
             --silent \
             --show-error \
-            "$KEYCLOAK_URL/realms/$REALM/.well-known/openid-configuration" \
+            "$KEYCLOAK_URL/realms/$KEYCLOAK_REALM/.well-known/openid-configuration" \
             > keycloak-response.json
-
-          echo ""
-          echo "Keycloak response received successfully."
-
-          echo ""
-          echo "Validating issuer..."
 
           ISSUER=$(python3 -c "
           import json
+
           with open('keycloak-response.json') as f:
               data = json.load(f)
-          print(data.get('issuer', ''))
+
+          print(data['issuer'])
           ")
 
-          EXPECTED_ISSUER="$KEYCLOAK_URL/realms/$REALM"
+          EXPECTED_ISSUER="$KEYCLOAK_URL/realms/$KEYCLOAK_REALM"
 
           echo "Expected issuer:"
           echo "$EXPECTED_ISSUER"
 
           echo ""
+
           echo "Returned issuer:"
           echo "$ISSUER"
 
           if [ "$ISSUER" != "$EXPECTED_ISSUER" ]; then
-            echo ""
-            echo "ERROR: Keycloak issuer is not correct."
-            exit 1
+              echo ""
+              echo "ERROR: Invalid Keycloak issuer."
+              exit 1
           fi
 
           echo ""
-          echo "Keycloak validation completed successfully."
+          echo "Keycloak is reachable."
+          echo "Realm is valid."
 
 
-      # ================================================================
-      # SUCCESS MESSAGE
-      # ================================================================
+      # ============================================================
+      # SOLICITAR DEVICE CODE
+      # ============================================================
 
-      - name: Keycloak validation successful
+      - name: Start Keycloak user authentication
+        env:
+          KEYCLOAK_URL: "http://keycloak.local:8080"
+          KEYCLOAK_REALM: "devops"
+
+          # Cliente creado en Keycloak específicamente
+          # para GitHub Actions.
+          KEYCLOAK_CLIENT_ID: ${{ secrets.KEYCLOAK_DEVICE_CLIENT_ID }}
+
+        run: |
+
+          set -euo pipefail
+
+          DEVICE_ENDPOINT="$KEYCLOAK_URL/realms/$KEYCLOAK_REALM/protocol/openid-connect/auth/device"
+
+          echo ""
+          echo "========================================"
+          echo "KEYCLOAK USER AUTHENTICATION"
+          echo "========================================"
+
+          echo ""
+          echo "Requesting device authorization..."
+
+          RESPONSE=$(curl \
+            --fail \
+            --silent \
+            --show-error \
+            --request POST \
+            "$DEVICE_ENDPOINT" \
+            --header "Content-Type: application/x-www-form-urlencoded" \
+            --data-urlencode "client_id=$KEYCLOAK_CLIENT_ID")
+
+          echo ""
+          echo "Device authorization received."
+
+          # ----------------------------------------------------------
+          # Extraer valores
+          # ----------------------------------------------------------
+
+          DEVICE_CODE=$(python3 -c '
+          import json
+          import sys
+
+          data = json.loads(sys.stdin.read())
+
+          print(data["device_code"])
+          ' <<< "$RESPONSE")
+
+          USER_CODE=$(python3 -c '
+          import json
+          import sys
+
+          data = json.loads(sys.stdin.read())
+
+          print(data["user_code"])
+          ' <<< "$RESPONSE")
+
+          VERIFICATION_URI=$(python3 -c '
+          import json
+          import sys
+
+          data = json.loads(sys.stdin.read())
+
+          print(
+              data.get(
+                  "verification_uri_complete",
+                  data.get("verification_uri")
+              )
+          )
+          ' <<< "$RESPONSE")
+
+          INTERVAL=$(python3 -c '
+          import json
+          import sys
+
+          data = json.loads(sys.stdin.read())
+
+          print(data.get("interval", 5))
+          ' <<< "$RESPONSE")
+
+          EXPIRES_IN=$(python3 -c '
+          import json
+          import sys
+
+          data = json.loads(sys.stdin.read())
+
+          print(data.get("expires_in", 600))
+          ' <<< "$RESPONSE")
+
+
+          # ----------------------------------------------------------
+          # IMPORTANTE
+          #
+          # NO mostramos DEVICE_CODE.
+          #
+          # DEVICE_CODE es secreto.
+          # ----------------------------------------------------------
+
+          echo ""
+          echo "========================================"
+          echo "ACTION REQUIRED"
+          echo "========================================"
+
+          echo ""
+          echo "Open this URL in your browser:"
+          echo ""
+
+          echo "$VERIFICATION_URI"
+
+          echo ""
+          echo "User code:"
+          echo "$USER_CODE"
+
+          echo ""
+          echo "Please authenticate with Keycloak."
+          echo ""
+
+          echo "Waiting for user authentication..."
+
+          # ----------------------------------------------------------
+          # Guardamos valores para el siguiente step
+          # ----------------------------------------------------------
+
+          echo "DEVICE_CODE=$DEVICE_CODE" >> "$GITHUB_ENV"
+          echo "TOKEN_INTERVAL=$INTERVAL" >> "$GITHUB_ENV"
+          echo "TOKEN_EXPIRES_IN=$EXPIRES_IN" >> "$GITHUB_ENV"
+
+
+      # ============================================================
+      # ESPERAR AUTENTICACIÓN DEL USUARIO
+      # ============================================================
+
+      - name: Wait for Keycloak authentication
+        env:
+          KEYCLOAK_URL: "http://keycloak.local:8080"
+          KEYCLOAK_REALM: "devops"
+          KEYCLOAK_CLIENT_ID: ${{ secrets.KEYCLOAK_DEVICE_CLIENT_ID }}
+
+        run: |
+
+          set -euo pipefail
+
+          TOKEN_ENDPOINT="$KEYCLOAK_URL/realms/$KEYCLOAK_REALM/protocol/openid-connect/token"
+
+          echo ""
+          echo "Waiting for Keycloak authentication..."
+
+          START_TIME=$(date +%s)
+
+          while true; do
+
+              NOW=$(date +%s)
+              ELAPSED=$((NOW - START_TIME))
+
+              if [ "$ELAPSED" -ge "$TOKEN_EXPIRES_IN" ]; then
+                  echo ""
+                  echo "ERROR: Keycloak authentication timed out."
+                  exit 1
+              fi
+
+              RESPONSE=$(curl \
+                --silent \
+                --show-error \
+                --request POST \
+                "$TOKEN_ENDPOINT" \
+                --header "Content-Type: application/x-www-form-urlencoded" \
+                --data-urlencode "grant_type=urn:ietf:params:oauth:grant-type:device_code" \
+                --data-urlencode "device_code=$DEVICE_CODE" \
+                --data-urlencode "client_id=$KEYCLOAK_CLIENT_ID" \
+                || true)
+
+              ERROR=$(python3 -c '
+              import json
+              import sys
+
+              try:
+                  data = json.loads(sys.stdin.read())
+                  print(data.get("error", ""))
+              except:
+                  print("")
+              ' <<< "$RESPONSE")
+
+              # ------------------------------------------------------
+              # Usuario todavía no ha terminado el login
+              # ------------------------------------------------------
+
+              if [ "$ERROR" = "authorization_pending" ]; then
+
+                  echo "Waiting for user..."
+
+                  sleep "$TOKEN_INTERVAL"
+
+                  continue
+
+              fi
+
+              # ------------------------------------------------------
+              # Usuario ha tardado demasiado
+              # ------------------------------------------------------
+
+              if [ "$ERROR" = "slow_down" ]; then
+
+                  echo "Keycloak requested slower polling."
+
+                  sleep $((TOKEN_INTERVAL + 5))
+
+                  continue
+
+              fi
+
+              # ------------------------------------------------------
+              # Error real
+              # ------------------------------------------------------
+
+              if [ -n "$ERROR" ]; then
+
+                  echo ""
+                  echo "ERROR: Keycloak authentication failed."
+                  echo "Keycloak error: $ERROR"
+
+                  exit 1
+
+              fi
+
+              # ------------------------------------------------------
+              # Hemos recibido el token
+              # ------------------------------------------------------
+
+              ACCESS_TOKEN=$(python3 -c '
+              import json
+              import sys
+
+              data = json.loads(sys.stdin.read())
+
+              token = data.get("access_token")
+
+              if not token:
+                  sys.exit(1)
+
+              print(token)
+              ' <<< "$RESPONSE")
+
+              echo ""
+              echo "========================================"
+              echo "KEYCLOAK AUTHENTICATION SUCCESS"
+              echo "========================================"
+
+              # ------------------------------------------------------
+              # Guardamos el token temporalmente.
+              # NO se imprime.
+              # ------------------------------------------------------
+
+              printf '%s' "$ACCESS_TOKEN" > keycloak-token.txt
+
+              break
+
+          done
+
+
+      # ============================================================
+      # IDENTIFICAR USUARIO AUTENTICADO
+      # ============================================================
+
+      - name: Validate authenticated Keycloak user
+        run: |
+
+          set -euo pipefail
+
+          python3 <<'PY'
+
+          import base64
+          import json
+          import sys
+
+          token = open("keycloak-token.txt").read().strip()
+
+          parts = token.split(".")
+
+          if len(parts) != 3:
+              print("ERROR: Token is not a JWT.")
+              sys.exit(1)
+
+          # --------------------------------------------------------
+          # Decodificar payload
+          # --------------------------------------------------------
+
+          payload = parts[1]
+
+          payload += "=" * (-len(payload) % 4)
+
+          data = json.loads(
+              base64.urlsafe_b64decode(payload)
+          )
+
+          username = data.get(
+              "preferred_username",
+              "<not present>"
+          )
+
+          subject = data.get(
+              "sub",
+              "<not present>"
+          )
+
+          issuer = data.get(
+              "iss",
+              "<not present>"
+          )
+
+          email = data.get(
+              "email",
+              "<not present>"
+          )
+
+          name = data.get(
+              "name",
+              "<not present>"
+          )
+
+          print("")
+          print("========================================")
+          print("AUTHENTICATED KEYCLOAK USER")
+          print("========================================")
+
+          print(f"Username: {username}")
+          print(f"Name:     {name}")
+          print(f"Email:    {email}")
+          print(f"Subject:  {subject}")
+          print(f"Issuer:   {issuer}")
+
+          print("========================================")
+
+          PY
+
+
+      # ============================================================
+      # LIMPIAR TOKEN
+      # ============================================================
+
+      - name: Remove Keycloak token
+        if: always()
+        run: |
+
+          rm -f keycloak-token.txt
+
+          echo "Temporary Keycloak token removed."
+
+
+      # ============================================================
+      # SIGUIENTE STEP
+      # ============================================================
+
+      - name: Continue pipeline
         if: success()
         run: |
+
           echo ""
           echo "========================================"
-          echo "       KEYCLOAK OK"
-          echo "========================================"
-          echo ""
-          echo "Keycloak is running correctly."
-          echo "Realm: devops"
-          echo "URL: http://keycloak.local:8080"
-          echo ""
-          echo "The GitHub Actions runner can connect"
-          echo "successfully to Keycloak."
-          echo ""
+          echo "       KEYCLOAK VALIDATION OK"
           echo "========================================"
 
-          
+          echo ""
+          echo "The user authenticated successfully"
+          echo "against Keycloak."
+
+          echo ""
+          echo "The pipeline can continue."
+
+          echo ""
+          echo "========================================"
